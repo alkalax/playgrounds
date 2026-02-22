@@ -68,22 +68,48 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (c Column) View(width, height int) string {
-	colStyle := lipgloss.NewStyle().
+	renderedTasks := make([]string, len(c.tasks)+1) // +1 for column title
+	renderedTasks[0] = lipgloss.NewStyle().
+		Width(width * 3 / 4).
+		Align(lipgloss.Center).
+		MarginBottom(1).
+		Border(lipgloss.HiddenBorder()).
+		BorderForeground(lipgloss.Color("23")).
+		Foreground(lipgloss.Color("23")).
+		Bold(true).
+		Render(c.title)
+
+	for i, t := range c.tasks {
+		renderedTasks[i+1] = lipgloss.NewStyle().
+			Width(width*3/4).
+			Align(lipgloss.Center).
+			Padding(0, 1).
+			Border(lipgloss.NormalBorder()).
+			Foreground(lipgloss.Color("23")).
+			BorderForeground(lipgloss.Color("23")).
+			Render(t)
+	}
+
+	return lipgloss.NewStyle().
 		Height(height).
 		Width(width).
-		Align(lipgloss.Center).
-		Border(lipgloss.NormalBorder())
-
-	return colStyle.Render(c.title)
+		Align(lipgloss.Center, lipgloss.Top).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("23")).
+		Render(lipgloss.JoinVertical(lipgloss.Top, renderedTasks...))
 }
 
 func (m model) View() string {
-	renderedColumns := make([]string, len(m.columns))
-	for i := range m.columns {
-		renderedColumns[i] = m.columns[i].View(m.width/4, m.height*3/4)
-	}
+	colWidth := m.width / 4
+	colHeight := m.height * 3 / 4
 
-	row := lipgloss.JoinHorizontal(lipgloss.Center, renderedColumns...)
+	style := lipgloss.NewStyle()
+	row := lipgloss.JoinHorizontal(
+		lipgloss.Center,
+		style.MarginRight(3).Render(m.columns[0].View(colWidth, colHeight)),
+		style.MarginRight(3).Render(m.columns[1].View(colWidth, colHeight)),
+		style.Render(m.columns[2].View(colWidth, colHeight)),
+	)
 
 	return lipgloss.NewStyle().
 		Width(m.width).

@@ -8,10 +8,16 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+var (
+	colorNormal  = lipgloss.Color("23")
+	colorFocused = lipgloss.Color("25")
+)
+
 type model struct {
-	width   int
-	height  int
-	columns []Column
+	width         int
+	height        int
+	focusedColumn int
+	columns       []Column
 }
 
 type Column struct {
@@ -61,21 +67,35 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
+		case "h", "left":
+			if m.focusedColumn > 0 {
+				m.focusedColumn--
+			}
+			return m, nil
+		case "l", "right":
+			if m.focusedColumn < len(m.columns)-1 {
+				m.focusedColumn++
+			}
+			return m, nil
 		}
 	}
 
 	return m, nil
 }
 
-func (c Column) View(width, height int) string {
+func (c Column) View(width, height int, focused bool) string {
+	color := colorNormal
+	if focused {
+		color = colorFocused
+	}
 	renderedTasks := make([]string, len(c.tasks)+1) // +1 for column title
 	renderedTasks[0] = lipgloss.NewStyle().
 		Width(width * 3 / 4).
 		Align(lipgloss.Center).
 		MarginBottom(1).
 		Border(lipgloss.HiddenBorder()).
-		BorderForeground(lipgloss.Color("23")).
-		Foreground(lipgloss.Color("23")).
+		BorderForeground(color).
+		Foreground(color).
 		Bold(true).
 		Render(c.title)
 
@@ -95,7 +115,7 @@ func (c Column) View(width, height int) string {
 		Width(width).
 		Align(lipgloss.Center, lipgloss.Top).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("23")).
+		BorderForeground(color).
 		Render(lipgloss.JoinVertical(lipgloss.Top, renderedTasks...))
 }
 
@@ -106,9 +126,9 @@ func (m model) View() string {
 	style := lipgloss.NewStyle()
 	row := lipgloss.JoinHorizontal(
 		lipgloss.Center,
-		style.MarginRight(3).Render(m.columns[0].View(colWidth, colHeight)),
-		style.MarginRight(3).Render(m.columns[1].View(colWidth, colHeight)),
-		style.Render(m.columns[2].View(colWidth, colHeight)),
+		style.MarginRight(3).Render(m.columns[0].View(colWidth, colHeight, m.focusedColumn == 0)),
+		style.MarginRight(3).Render(m.columns[1].View(colWidth, colHeight, m.focusedColumn == 1)),
+		style.Render(m.columns[2].View(colWidth, colHeight, m.focusedColumn == 2)),
 	)
 
 	return lipgloss.NewStyle().

@@ -26,6 +26,26 @@ type Column struct {
 	focusedTask int
 }
 
+func (c Column) changeTaskPriority(increase bool) (changed bool) {
+	changed = false
+	if !increase && c.focusedTask < len(c.tasks)-1 {
+		tmp := c.tasks[c.focusedTask+1]
+		c.tasks[c.focusedTask+1] = c.tasks[c.focusedTask]
+		c.tasks[c.focusedTask] = tmp
+
+		changed = true
+
+	} else if increase && c.focusedTask > 0 {
+		tmp := c.tasks[c.focusedTask-1]
+		c.tasks[c.focusedTask-1] = c.tasks[c.focusedTask]
+		c.tasks[c.focusedTask] = tmp
+
+		changed = true
+	}
+
+	return changed
+}
+
 func initialModel() tea.Model {
 	return model{
 		columns: []Column{
@@ -91,20 +111,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case "ctrl+j", "ctrl+down":
-			focusedColumn := m.columns[m.focusedColumn]
-			if focusedColumn.focusedTask < len(focusedColumn.tasks)-1 {
-				tmp := focusedColumn.tasks[focusedColumn.focusedTask+1]
-				focusedColumn.tasks[focusedColumn.focusedTask+1] = focusedColumn.tasks[focusedColumn.focusedTask]
-				focusedColumn.tasks[focusedColumn.focusedTask] = tmp
+			if m.columns[m.focusedColumn].changeTaskPriority(false) {
 				m.columns[m.focusedColumn].focusedTask++
 			}
 			return m, nil
 		case "ctrl+k", "ctrl+up":
-			focusedColumn := m.columns[m.focusedColumn]
-			if focusedColumn.focusedTask > 0 {
-				tmp := focusedColumn.tasks[focusedColumn.focusedTask-1]
-				focusedColumn.tasks[focusedColumn.focusedTask-1] = focusedColumn.tasks[focusedColumn.focusedTask]
-				focusedColumn.tasks[focusedColumn.focusedTask] = tmp
+			if m.columns[m.focusedColumn].changeTaskPriority(true) {
 				m.columns[m.focusedColumn].focusedTask--
 			}
 			return m, nil

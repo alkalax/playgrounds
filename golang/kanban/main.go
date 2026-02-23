@@ -90,6 +90,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.columns[m.focusedColumn].focusedTask--
 			}
 			return m, nil
+		case "ctrl+j", "ctrl+down":
+			focusedColumn := m.columns[m.focusedColumn]
+			if focusedColumn.focusedTask < len(focusedColumn.tasks)-1 {
+				tmp := focusedColumn.tasks[focusedColumn.focusedTask+1]
+				focusedColumn.tasks[focusedColumn.focusedTask+1] = focusedColumn.tasks[focusedColumn.focusedTask]
+				focusedColumn.tasks[focusedColumn.focusedTask] = tmp
+				m.columns[m.focusedColumn].focusedTask++
+			}
+			return m, nil
+		case "ctrl+k", "ctrl+up":
+			focusedColumn := m.columns[m.focusedColumn]
+			if focusedColumn.focusedTask > 0 {
+				tmp := focusedColumn.tasks[focusedColumn.focusedTask-1]
+				focusedColumn.tasks[focusedColumn.focusedTask-1] = focusedColumn.tasks[focusedColumn.focusedTask]
+				focusedColumn.tasks[focusedColumn.focusedTask] = tmp
+				m.columns[m.focusedColumn].focusedTask--
+			}
+			return m, nil
 		}
 	}
 

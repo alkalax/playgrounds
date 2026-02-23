@@ -21,8 +21,29 @@ type model struct {
 }
 
 type Column struct {
-	title string
-	tasks []string
+	title       string
+	tasks       []string
+	focusedTask int
+}
+
+func (c Column) changeTaskPriority(increase bool) (changed bool) {
+	changed = false
+	if !increase && c.focusedTask < len(c.tasks)-1 {
+		tmp := c.tasks[c.focusedTask+1]
+		c.tasks[c.focusedTask+1] = c.tasks[c.focusedTask]
+		c.tasks[c.focusedTask] = tmp
+
+		changed = true
+
+	} else if increase && c.focusedTask > 0 {
+		tmp := c.tasks[c.focusedTask-1]
+		c.tasks[c.focusedTask-1] = c.tasks[c.focusedTask]
+		c.tasks[c.focusedTask] = tmp
+
+		changed = true
+	}
+
+	return changed
 }
 
 func initialModel() tea.Model {
@@ -77,6 +98,28 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.focusedColumn++
 			}
 			return m, nil
+		case "j", "down":
+			focusedColumn := m.columns[m.focusedColumn]
+			if focusedColumn.focusedTask < len(focusedColumn.tasks)-1 {
+				m.columns[m.focusedColumn].focusedTask++
+			}
+			return m, nil
+		case "k", "up":
+			focusedColumn := m.columns[m.focusedColumn]
+			if focusedColumn.focusedTask > 0 {
+				m.columns[m.focusedColumn].focusedTask--
+			}
+			return m, nil
+		case "ctrl+j", "ctrl+down":
+			if m.columns[m.focusedColumn].changeTaskPriority(false) {
+				m.columns[m.focusedColumn].focusedTask++
+			}
+			return m, nil
+		case "ctrl+k", "ctrl+up":
+			if m.columns[m.focusedColumn].changeTaskPriority(true) {
+				m.columns[m.focusedColumn].focusedTask--
+			}
+			return m, nil
 		}
 	}
 
@@ -100,13 +143,17 @@ func (c Column) View(width, height int, focused bool) string {
 		Render(c.title)
 
 	for i, t := range c.tasks {
+		taskColor := color
+		if focused && i == c.focusedTask {
+			taskColor = lipgloss.Color("255")
+		}
 		renderedTasks[i+1] = lipgloss.NewStyle().
 			Width(width*3/4).
 			Align(lipgloss.Center).
 			Padding(0, 1).
 			Border(lipgloss.NormalBorder()).
-			Foreground(lipgloss.Color("23")).
-			BorderForeground(lipgloss.Color("23")).
+			Foreground(taskColor).
+			BorderForeground(taskColor).
 			Render(t)
 	}
 

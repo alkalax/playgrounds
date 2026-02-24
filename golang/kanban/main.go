@@ -46,6 +46,11 @@ func (c Column) changeTaskPriority(increase bool) (changed bool) {
 	return changed
 }
 
+func (c Column) moveTask(index int, dest *Column) {
+	dest.tasks = append(dest.tasks, c.tasks[index])
+	c.tasks = append(c.tasks[:c.focusedTask], c.tasks[c.focusedTask+1:]...)
+}
+
 func initialModel() tea.Model {
 	return model{
 		columns: []Column{
@@ -124,13 +129,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.focusedColumn < len(m.columns)-1 && len(m.columns[m.focusedColumn].tasks) > 0 {
 				currColumn := &m.columns[m.focusedColumn]
 				nextColumn := &m.columns[m.focusedColumn+1]
-				nextColumn.tasks = append(
-					nextColumn.tasks,
-					currColumn.tasks[currColumn.focusedTask])
-				currColumn.tasks = append(
-					currColumn.tasks[:currColumn.focusedTask],
-					currColumn.tasks[currColumn.focusedTask+1:]...,
-				)
+				currColumn.moveTask(currColumn.focusedTask, nextColumn)
 				nextColumn.focusedTask = len(nextColumn.tasks) - 1
 				m.focusedColumn++
 			}
@@ -139,13 +138,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.focusedColumn > 0 && len(m.columns[m.focusedColumn].tasks) > 0 {
 				currColumn := &m.columns[m.focusedColumn]
 				prevColumn := &m.columns[m.focusedColumn-1]
-				prevColumn.tasks = append(
-					prevColumn.tasks,
-					currColumn.tasks[currColumn.focusedTask])
-				currColumn.tasks = append(
-					currColumn.tasks[:currColumn.focusedTask],
-					currColumn.tasks[currColumn.focusedTask+1:]...,
-				)
+				currColumn.moveTask(currColumn.focusedTask, prevColumn)
 				prevColumn.focusedTask = len(prevColumn.tasks) - 1
 				m.focusedColumn--
 			}

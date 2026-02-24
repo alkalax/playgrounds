@@ -120,6 +120,36 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.columns[m.focusedColumn].focusedTask--
 			}
 			return m, nil
+		case "ctrl+l", "ctrl+right":
+			if m.focusedColumn < len(m.columns)-1 && len(m.columns[m.focusedColumn].tasks) > 0 {
+				currColumn := &m.columns[m.focusedColumn]
+				nextColumn := &m.columns[m.focusedColumn+1]
+				nextColumn.tasks = append(
+					nextColumn.tasks,
+					currColumn.tasks[currColumn.focusedTask])
+				currColumn.tasks = append(
+					currColumn.tasks[:currColumn.focusedTask],
+					currColumn.tasks[currColumn.focusedTask+1:]...,
+				)
+				nextColumn.focusedTask = len(nextColumn.tasks) - 1
+				m.focusedColumn++
+			}
+			return m, nil
+		case "ctrl+h", "ctrl+left":
+			if m.focusedColumn > 0 && len(m.columns[m.focusedColumn].tasks) > 0 {
+				currColumn := &m.columns[m.focusedColumn]
+				prevColumn := &m.columns[m.focusedColumn-1]
+				prevColumn.tasks = append(
+					prevColumn.tasks,
+					currColumn.tasks[currColumn.focusedTask])
+				currColumn.tasks = append(
+					currColumn.tasks[:currColumn.focusedTask],
+					currColumn.tasks[currColumn.focusedTask+1:]...,
+				)
+				prevColumn.focusedTask = len(prevColumn.tasks) - 1
+				m.focusedColumn--
+			}
+			return m, nil
 		}
 	}
 

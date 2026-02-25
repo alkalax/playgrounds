@@ -46,9 +46,12 @@ func (c Column) changeTaskPriority(increase bool) (changed bool) {
 	return changed
 }
 
-func (c Column) moveTask(index int, dest *Column) {
+func (c *Column) moveTask(index int, dest *Column) {
 	dest.tasks = append(dest.tasks, c.tasks[index])
 	c.tasks = append(c.tasks[:c.focusedTask], c.tasks[c.focusedTask+1:]...)
+	if c.focusedTask > 0 {
+		c.focusedTask--
+	}
 }
 
 func initialModel() tea.Model {

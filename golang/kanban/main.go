@@ -54,34 +54,6 @@ func (c *Column) moveTask(index int, dest *Column) {
 	}
 }
 
-func initialModel() tea.Model {
-	return model{
-		columns: []Column{
-			{
-				title: "TODO",
-				tasks: []string{
-					"Task 1",
-					"Task 2",
-					"Task 3",
-				},
-			},
-			{
-				title: "IN PROGRESS",
-				tasks: []string{
-					"Task 4",
-					"Task 5",
-				},
-			},
-			{
-				title: "DONE",
-				tasks: []string{
-					"Task 6",
-				},
-			},
-		},
-	}
-}
-
 func (m model) Init() tea.Cmd {
 	return nil
 }
@@ -210,7 +182,33 @@ func (m model) View() string {
 }
 
 func main() {
-	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
+	model := model{
+		columns: []Column{
+			{
+				title: "TODO",
+				tasks: []string{
+					"Task 1",
+					"Task 2",
+					"Task 3",
+				},
+			},
+			{
+				title: "IN PROGRESS",
+				tasks: []string{
+					"Task 4",
+					"Task 5",
+				},
+			},
+			{
+				title: "DONE",
+				tasks: []string{
+					"Task 6",
+				},
+			},
+		},
+	}
+
+	p := tea.NewProgram(model, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

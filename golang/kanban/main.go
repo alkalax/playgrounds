@@ -166,16 +166,15 @@ func (c Column) View(width, height int, focused bool) string {
 		Render(c.title)
 
 	for i, t := range c.tasks {
-		taskColor := color
+		taskColor := colorNormal
 		if focused && i == c.focusedTask {
-			taskColor = lipgloss.Color("255")
+			taskColor = colorFocused
 		}
 		renderedTasks[i+1] = lipgloss.NewStyle().
 			Width(width*3/4).
 			Align(lipgloss.Center).
 			Padding(0, 1).
 			Border(lipgloss.NormalBorder()).
-			Foreground(taskColor).
 			BorderForeground(taskColor).
 			Render(t)
 	}

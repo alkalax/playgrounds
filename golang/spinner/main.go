@@ -70,6 +70,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.focused--
 			}
 			return m, nil
+		case " ":
+			m.items[m.focused].ready = false
+			return m, tea.Batch(m.items[m.focused].spinner.Tick, waitReadyFor(m.focused))
 		}
 	case readyMsg:
 		m.items[msg.index].ready = true

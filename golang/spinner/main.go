@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -19,6 +21,10 @@ type item struct {
 	spinner spinner.Model
 }
 
+type readyMsg struct {
+	index int
+}
+
 func initialModel() model {
 	items := make([]item, 5)
 
@@ -32,10 +38,16 @@ func initialModel() model {
 	return model{items: items}
 }
 
+func waitReadyFor(index int) tea.Cmd {
+	return tea.Tick(time.Duration(rand.Intn(7))*time.Second, func(t time.Time) tea.Msg {
+		return readyMsg{index: index}
+	})
+}
+
 func (m model) Init() tea.Cmd {
 	var cmds []tea.Cmd
 	for i := range m.items {
-		cmds = append(cmds, m.items[i].spinner.Tick)
+		cmds = append(cmds, m.items[i].spinner.Tick, waitReadyFor(i))
 	}
 
 	return tea.Batch(cmds...)
@@ -48,6 +60,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		}
+	case readyMsg:
+		m.items[msg.index].ready = true
+		return m, nil
 	default:
 		cmds := make([]tea.Cmd, len(m.items))
 		for i := range m.items {
@@ -60,7 +75,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (i item) View() string {
-	return fmt.Sprintf("\t%s\t%s", i.name, i.spinner.View())
+	state := i.spinner.View()
+	if i.ready {
+		state = "ready"
+	}
+	return fmt.Sprintf("\t%s\t%s", i.name, state)
 }
 
 func (m model) View() string {

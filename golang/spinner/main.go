@@ -12,7 +12,8 @@ import (
 )
 
 type model struct {
-	items []item
+	items   []item
+	focused int
 }
 
 type item struct {
@@ -59,6 +60,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "j", "down":
+			if m.focused < len(m.items)-1 {
+				m.focused++
+			}
+			return m, nil
+		case "k", "up":
+			if m.focused > 0 {
+				m.focused--
+			}
+			return m, nil
 		}
 	case readyMsg:
 		m.items[msg.index].ready = true
@@ -74,18 +85,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (i item) View() string {
+func (i item) View(focused bool) string {
 	state := i.spinner.View()
 	if i.ready {
 		state = "ready"
 	}
-	return fmt.Sprintf("\t%s\t%s", i.name, state)
+	prefix := "   "
+	suffix := "     "
+	if focused {
+		prefix = " > "
+		suffix = " <   "
+	}
+	return fmt.Sprintf("%s%s%s%s", prefix, i.name, suffix, state)
 }
 
 func (m model) View() string {
 	var sb strings.Builder
 	for i := range m.items {
-		sb.WriteString(m.items[i].View())
+		sb.WriteString(m.items[i].View(m.focused == i))
 		sb.WriteString("\n")
 	}
 

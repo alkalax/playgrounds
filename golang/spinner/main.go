@@ -93,13 +93,13 @@ func (i item) View(focused bool) string {
 	if i.ready {
 		state = "ready"
 	}
-	prefix := "   "
-	suffix := "     "
+	frontGap := "   "
+	midGap := "     "
 	if focused {
-		prefix = " > "
-		suffix = " <   "
+		frontGap = " > "
+		midGap = " <   "
 	}
-	return fmt.Sprintf("%s%s%s%s", prefix, i.name, suffix, state)
+	return fmt.Sprintf("%s%s%s%s", frontGap, i.name, midGap, state)
 }
 
 func (m model) View() string {

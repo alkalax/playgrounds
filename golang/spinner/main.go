@@ -108,7 +108,7 @@ func (m model) View() string {
 		sb.WriteString(m.items[i].View(m.focused == i))
 		sb.WriteString("\n")
 	}
-
+	sb.WriteString("\n\tj/k, ↓/↑: select • <space>: reset selection • ctrl+c, q: exit\n")
 	return sb.String()
 }
 

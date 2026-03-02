@@ -56,18 +56,44 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (h header) View(width, height int) string {
 	return lipgloss.NewStyle().
-		Width(width).
-		Height(height).
+		Width(width-2).
+		Height(height-2).
 		Align(lipgloss.Center, lipgloss.Center).
 		Border(lipgloss.NormalBorder()).
 		Render(h.content)
 }
 
-func (m model) View() string {
-	header := m.header.View(m.width-2, m.height/8)
-	main := m.main.content
+func (m mainDiv) View(width, height int) string {
+	sidebarWidth := width / 5
+	sidebar := lipgloss.NewStyle().
+		Width(sidebarWidth-2).
+		Height(height-2).
+		Align(lipgloss.Center, lipgloss.Center).
+		Border(lipgloss.NormalBorder()).
+		Render("sidebar")
 
-	return lipgloss.JoinVertical(lipgloss.Top, header, main)
+	mainWidth := width - sidebarWidth
+	main := lipgloss.NewStyle().
+		Width(mainWidth-2).
+		Height(height-2).
+		Align(lipgloss.Center, lipgloss.Center).
+		Border(lipgloss.NormalBorder()).
+		Render(m.content)
+
+	return lipgloss.JoinHorizontal(lipgloss.Center, sidebar, main)
+}
+
+func (m model) View() string {
+	header := m.header.View(m.width, m.height/8)
+	main := m.main.View(m.width, m.height*7/8)
+
+	return lipgloss.Place(
+		m.width,
+		m.height,
+		lipgloss.Center,
+		lipgloss.Top,
+		lipgloss.JoinVertical(lipgloss.Top, header, main),
+	)
 }
 
 func main() {

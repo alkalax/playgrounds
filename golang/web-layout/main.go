@@ -22,15 +22,18 @@ type header struct {
 }
 
 type mainDiv struct {
-	content string
-	width   int
-	height  int
+	content     string
+	sidebarTabs []string
+	width       int
+	height      int
 }
 
 func initialModel() model {
 	return model{
 		header: header{content: "Title Here"},
-		main:   mainDiv{content: "Some text here"},
+		main: mainDiv{
+			sidebarTabs: []string{"Tab 1", "Tab 2"},
+			content:     "Some text here"},
 	}
 }
 
@@ -64,13 +67,19 @@ func (h header) View(width, height int) string {
 }
 
 func (m mainDiv) View(width, height int) string {
+	renderedTabs := make([]string, len(m.sidebarTabs))
+	for i := range m.sidebarTabs {
+		renderedTabs[i] = lipgloss.NewStyle().
+			Padding(1, 1).
+			Render(m.sidebarTabs[i])
+	}
 	sidebarWidth := width / 5
 	sidebar := lipgloss.NewStyle().
 		Width(sidebarWidth-2).
 		Height(height-2).
-		Align(lipgloss.Center, lipgloss.Center).
+		Align(lipgloss.Center, lipgloss.Top).
 		Border(lipgloss.NormalBorder()).
-		Render("sidebar")
+		Render(lipgloss.JoinVertical(lipgloss.Top, renderedTabs...))
 
 	mainWidth := width - sidebarWidth
 	main := lipgloss.NewStyle().
@@ -84,8 +93,8 @@ func (m mainDiv) View(width, height int) string {
 }
 
 func (m model) View() string {
-	header := m.header.View(m.width, m.height/8)
-	main := m.main.View(m.width, m.height*7/8)
+	header := m.header.View(m.width, m.height/6)
+	main := m.main.View(m.width, m.height*5/6)
 
 	return lipgloss.Place(
 		m.width,

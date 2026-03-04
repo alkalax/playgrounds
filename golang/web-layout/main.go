@@ -22,18 +22,27 @@ type header struct {
 }
 
 type mainDiv struct {
-	content     string
-	sidebarTabs []string
-	width       int
-	height      int
+	pages      []page
+	focusedTab int
+	width      int
+	height     int
+}
+
+type page struct {
+	name    string
+	content string
 }
 
 func initialModel() model {
 	return model{
 		header: header{content: "Title Here"},
 		main: mainDiv{
-			sidebarTabs: []string{"Tab 1", "Tab 2"},
-			content:     "Some text here"},
+			pages: []page{
+				{name: "Home", content: "This is the home page."},
+				{name: "FAQ", content: "Frequently asked questions"},
+				{name: "Contact", content: "Email: contact@webpage.com"},
+			},
+		},
 	}
 }
 
@@ -51,6 +60,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "j", "down":
+			if m.main.focusedTab < len(m.main.pages)-1 {
+				m.main.focusedTab++
+			}
+			return m, nil
+		case "k", "up":
+			if m.main.focusedTab > 0 {
+				m.main.focusedTab--
+			}
+			return m, nil
 		}
 	}
 
@@ -67,13 +86,18 @@ func (h header) View(width, height int) string {
 }
 
 func (m mainDiv) View(width, height int) string {
-	renderedTabs := make([]string, len(m.sidebarTabs))
-	for i := range m.sidebarTabs {
-		renderedTabs[i] = lipgloss.NewStyle().
-			Padding(1, 1).
-			Render(m.sidebarTabs[i])
-	}
 	sidebarWidth := width / 5
+	renderedTabs := make([]string, len(m.pages))
+	for i := range m.pages {
+		tabStyle := lipgloss.NewStyle().
+			Padding(0, 1).
+			Width(sidebarWidth - 2).
+			Align(lipgloss.Center)
+		if m.focusedTab == i {
+			tabStyle = tabStyle.Foreground(lipgloss.Color("240"))
+		}
+		renderedTabs[i] = tabStyle.Render(m.pages[i].name)
+	}
 	sidebar := lipgloss.NewStyle().
 		Width(sidebarWidth-2).
 		Height(height-2).
@@ -87,7 +111,7 @@ func (m mainDiv) View(width, height int) string {
 		Height(height-2).
 		Align(lipgloss.Center, lipgloss.Center).
 		Border(lipgloss.NormalBorder()).
-		Render(m.content)
+		Render(m.pages[m.focusedTab].content)
 
 	return lipgloss.JoinHorizontal(lipgloss.Center, sidebar, main)
 }

@@ -24,6 +24,7 @@ type header struct {
 type mainDiv struct {
 	content     string
 	sidebarTabs []string
+	focusedTab  int
 	width       int
 	height      int
 }
@@ -51,6 +52,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "j", "down":
+			if m.main.focusedTab < len(m.main.sidebarTabs)-1 {
+				m.main.focusedTab++
+			}
+			return m, nil
+		case "k", "up":
+			if m.main.focusedTab > 0 {
+				m.main.focusedTab--
+			}
+			return m, nil
 		}
 	}
 
@@ -69,9 +80,14 @@ func (h header) View(width, height int) string {
 func (m mainDiv) View(width, height int) string {
 	renderedTabs := make([]string, len(m.sidebarTabs))
 	for i := range m.sidebarTabs {
-		renderedTabs[i] = lipgloss.NewStyle().
-			Padding(1, 1).
-			Render(m.sidebarTabs[i])
+		tabStyle := lipgloss.NewStyle().
+			Padding(0, 1)
+		if m.focusedTab == i {
+			tabStyle = tabStyle.Border(lipgloss.NormalBorder())
+		} else {
+			tabStyle = tabStyle.Border(lipgloss.HiddenBorder())
+		}
+		renderedTabs[i] = tabStyle.Render(m.sidebarTabs[i])
 	}
 	sidebarWidth := width / 5
 	sidebar := lipgloss.NewStyle().

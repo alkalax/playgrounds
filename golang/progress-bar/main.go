@@ -3,16 +3,33 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type model struct {
-	content string
+	percent  float64
+	progress progress.Model
+}
+
+type tickMsg time.Time
+
+func tick() tea.Cmd {
+	return tea.Tick(time.Millisecond, func(t time.Time) tea.Msg {
+		return tickMsg(t)
+	})
+}
+
+func initialModel() tea.Model {
+	return model{
+		progress: progress.New(),
+	}
 }
 
 func (m model) Init() tea.Cmd {
-	return nil
+	return tick()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -22,17 +39,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		}
+	case tickMsg:
+		m.percent += 0.0001
+		if m.percent > 1.0 {
+			m.percent = 1.0
+			return m, tea.Quit
+		}
+		return m, tick()
 	}
 
 	return m, nil
 }
 
 func (m model) View() string {
-	return m.content
+	return m.progress.ViewAs(m.percent)
 }
 
 func main() {
-	p := tea.NewProgram(model{content: "hello"}, tea.WithAltScreen())
+	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

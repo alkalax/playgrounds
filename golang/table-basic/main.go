@@ -4,15 +4,34 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type model struct {
-	content string
+	table table.Model
 }
 
 func initialModel() model {
-	return model{content: "test"}
+	columns := []table.Column{
+		{Title: "Id", Width: 4},
+		{Title: "City", Width: 10},
+	}
+
+	rows := []table.Row{
+		{"1", "Tokyo"},
+		{"2", "Gornji Milanovac"},
+		{"3", "Belgrade"},
+	}
+
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(7),
+	)
+
+	return model{t}
 }
 
 func (m model) Init() tea.Cmd {
@@ -32,7 +51,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return m.content
+	return m.table.View()
 }
 
 func main() {

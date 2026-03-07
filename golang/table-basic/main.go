@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
@@ -15,13 +16,14 @@ type model struct {
 func initialModel() model {
 	columns := []table.Column{
 		{Title: "Id", Width: 4},
-		{Title: "City", Width: 10},
+		{Title: "City", Width: 20},
+		{Title: "Country", Width: 20},
 	}
 
 	rows := []table.Row{
-		{"1", "Tokyo"},
-		{"2", "Gornji Milanovac"},
-		{"3", "Belgrade"},
+		{"1", "Tokyo", "Japan"},
+		{"2", "Gornji Milanovac", "Serbia"},
+		{"3", "Ljubljana", "Slovenia"},
 	}
 
 	t := table.New(
@@ -30,6 +32,20 @@ func initialModel() model {
 		table.WithFocused(true),
 		table.WithHeight(7),
 	)
+
+	s := table.DefaultStyles()
+	s.Header = s.Header.
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		BorderBottom(true).
+		Bold(false)
+
+	s.Selected = s.Selected.
+		Foreground(lipgloss.Color("229")).
+		Background(lipgloss.Color("57")).
+		Bold(false)
+
+	t.SetStyles(s)
 
 	return model{t}
 }
@@ -51,7 +67,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return m.table.View()
+	return lipgloss.NewStyle().
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		Render(m.table.View())
 }
 
 func main() {

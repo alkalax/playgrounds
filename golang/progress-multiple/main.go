@@ -7,9 +7,14 @@ import (
 
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
+	progressBlock progressBlock
+}
+
+type progressBlock struct {
 	percent  float64
 	progress progress.Model
 }
@@ -23,7 +28,11 @@ func tick() tea.Cmd {
 }
 
 func initialModel() model {
-	return model{progress: progress.New()}
+	return model{
+		progressBlock: progressBlock{
+			progress: progress.New(),
+		},
+	}
 }
 
 func (m model) Init() tea.Cmd {
@@ -37,13 +46,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case " ":
-			m.percent = 0.0
+			m.progressBlock.percent = 0.0
 			return m, tick()
 		}
 	case tickMsg:
-		m.percent += 0.0001
-		if m.percent > 1.0 {
-			m.percent = 1.0
+		m.progressBlock.percent += 0.0001
+		if m.progressBlock.percent > 1.0 {
+			m.progressBlock.percent = 1.0
 			return m, nil
 		}
 		return m, tick()
@@ -52,8 +61,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (pb progressBlock) View() string {
+	return lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("135")).
+		Foreground(lipgloss.Color("135")).
+		Padding(1, 1).
+		Render(pb.progress.ViewAs(pb.percent))
+}
+
 func (m model) View() string {
-	return m.progress.ViewAs(m.percent)
+	return m.progressBlock.View()
 }
 
 func main() {

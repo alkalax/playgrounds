@@ -36,6 +36,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case " ":
+			m.percent = 0.0
+			return m, tick()
 		}
 	case tickMsg:
 		m.percent += 0.0001

@@ -11,7 +11,7 @@ import (
 )
 
 type model struct {
-	progressBlock progressBlock
+	progressBlocks []progressBlock
 }
 
 type progressBlock struct {
@@ -27,16 +27,19 @@ func tick() tea.Cmd {
 	})
 }
 
-func initialModel() model {
+func initialModel(n int) model {
+	progressBlocks := make([]progressBlock, n)
+	for i := range progressBlocks {
+		progressBlocks[i] = progressBlock{progress: progress.New()}
+	}
 	return model{
-		progressBlock: progressBlock{
-			progress: progress.New(),
-		},
+		progressBlocks: progressBlocks,
 	}
 }
 
 func (m model) Init() tea.Cmd {
-	return tick()
+	//return tick()
+	return nil
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -45,17 +48,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
-		case " ":
-			m.progressBlock.percent = 0.0
-			return m, tick()
+			//case " ":
+			//	m.progressBlock.percent = 0.0
+			//	return m, tick()
 		}
-	case tickMsg:
-		m.progressBlock.percent += 0.0001
-		if m.progressBlock.percent > 1.0 {
-			m.progressBlock.percent = 1.0
-			return m, nil
-		}
-		return m, tick()
+		//case tickMsg:
+		//	m.progressBlock.percent += 0.0001
+		//	if m.progressBlock.percent > 1.0 {
+		//		m.progressBlock.percent = 1.0
+		//		return m, nil
+		//	}
+		//	return m, tick()
 	}
 
 	return m, nil
@@ -71,11 +74,15 @@ func (pb progressBlock) View() string {
 }
 
 func (m model) View() string {
-	return m.progressBlock.View()
+	renderedProgressBlocks := make([]string, len(m.progressBlocks))
+	for i := range m.progressBlocks {
+		renderedProgressBlocks[i] = m.progressBlocks[i].View()
+	}
+	return lipgloss.JoinVertical(lipgloss.Top, renderedProgressBlocks...)
 }
 
 func main() {
-	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
+	p := tea.NewProgram(initialModel(4), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

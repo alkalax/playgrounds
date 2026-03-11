@@ -19,11 +19,13 @@ type progressBlock struct {
 	progress progress.Model
 }
 
-type tickMsg time.Time
+type tickMsg struct {
+	index int
+}
 
-func tick() tea.Cmd {
+func tick(index int) tea.Cmd {
 	return tea.Tick(time.Millisecond, func(t time.Time) tea.Msg {
-		return tickMsg(t)
+		return tickMsg{index: index}
 	})
 }
 
@@ -38,8 +40,11 @@ func initialModel(n int) model {
 }
 
 func (m model) Init() tea.Cmd {
-	//return tick()
-	return nil
+	var cmds []tea.Cmd
+	for i := range m.progressBlocks {
+		cmds = append(cmds, tick(i))
+	}
+	return tea.Batch(cmds...)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -52,13 +57,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			//	m.progressBlock.percent = 0.0
 			//	return m, tick()
 		}
-		//case tickMsg:
-		//	m.progressBlock.percent += 0.0001
-		//	if m.progressBlock.percent > 1.0 {
-		//		m.progressBlock.percent = 1.0
-		//		return m, nil
-		//	}
-		//	return m, tick()
+	case tickMsg:
+		i := msg.index
+		m.progressBlocks[i].percent += 0.0001
+		if m.progressBlocks[i].percent > 1.0 {
+			m.progressBlocks[i].percent = 1.0
+			return m, nil
+		}
+		return m, tick(i)
 	}
 
 	return m, nil

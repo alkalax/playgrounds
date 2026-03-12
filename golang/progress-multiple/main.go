@@ -12,6 +12,7 @@ import (
 
 type model struct {
 	progressBlocks []progressBlock
+	selected       int
 }
 
 type progressBlock struct {
@@ -56,6 +57,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			//case " ":
 			//	m.progressBlock.percent = 0.0
 			//	return m, tick()
+		case "j", "down":
+			if m.selected < len(m.progressBlocks)-1 {
+				m.selected++
+			}
+			return m, nil
+		case "k", "up":
+			if m.selected > 0 {
+				m.selected--
+			}
+			return m, nil
 		}
 	case tickMsg:
 		i := msg.index
@@ -70,10 +81,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (pb progressBlock) View() string {
+func (pb progressBlock) View(selected bool) string {
+	borderColor := lipgloss.Color("135")
+	if selected {
+		borderColor = lipgloss.Color("250")
+	}
 	return lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("135")).
+		BorderForeground(borderColor).
 		Foreground(lipgloss.Color("135")).
 		Padding(1, 1).
 		Render(pb.progress.ViewAs(pb.percent))
@@ -82,7 +97,7 @@ func (pb progressBlock) View() string {
 func (m model) View() string {
 	renderedProgressBlocks := make([]string, len(m.progressBlocks))
 	for i := range m.progressBlocks {
-		renderedProgressBlocks[i] = m.progressBlocks[i].View()
+		renderedProgressBlocks[i] = m.progressBlocks[i].View(m.selected == i)
 	}
 	return lipgloss.JoinVertical(lipgloss.Top, renderedProgressBlocks...)
 }

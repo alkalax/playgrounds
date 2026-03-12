@@ -12,20 +12,23 @@ import (
 
 type model struct {
 	progressBlocks []progressBlock
+	selected       int
 }
 
 type progressBlock struct {
 	percent  float64
 	progress progress.Model
+	version  int
 }
 
 type tickMsg struct {
-	index int
+	index   int
+	version int
 }
 
-func tick(index int) tea.Cmd {
+func tick(index, version int) tea.Cmd {
 	return tea.Tick(time.Millisecond, func(t time.Time) tea.Msg {
-		return tickMsg{index: index}
+		return tickMsg{index: index, version: version}
 	})
 }
 
@@ -42,7 +45,7 @@ func initialModel(n int) model {
 func (m model) Init() tea.Cmd {
 	var cmds []tea.Cmd
 	for i := range m.progressBlocks {
-		cmds = append(cmds, tick(i))
+		cmds = append(cmds, tick(i, 0))
 	}
 	return tea.Batch(cmds...)
 }
@@ -53,27 +56,50 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
-			//case " ":
-			//	m.progressBlock.percent = 0.0
-			//	return m, tick()
+		case " ":
+			newVersion := m.progressBlocks[m.selected].version + 1
+			m.progressBlocks[m.selected] = progressBlock{
+				progress: progress.New(),
+				version:  newVersion,
+			}
+
+			return m, tick(m.selected, newVersion)
+		case "j", "down":
+			if m.selected < len(m.progressBlocks)-1 {
+				m.selected++
+			}
+			return m, nil
+		case "k", "up":
+			if m.selected > 0 {
+				m.selected--
+			}
+			return m, nil
 		}
 	case tickMsg:
 		i := msg.index
+		if m.progressBlocks[i].version != msg.version {
+			return m, nil
+		}
+
 		m.progressBlocks[i].percent += 0.0001
 		if m.progressBlocks[i].percent > 1.0 {
 			m.progressBlocks[i].percent = 1.0
 			return m, nil
 		}
-		return m, tick(i)
+		return m, tick(i, msg.version)
 	}
 
 	return m, nil
 }
 
-func (pb progressBlock) View() string {
+func (pb progressBlock) View(selected bool) string {
+	borderColor := lipgloss.Color("135")
+	if selected {
+		borderColor = lipgloss.Color("250")
+	}
 	return lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("135")).
+		BorderForeground(borderColor).
 		Foreground(lipgloss.Color("135")).
 		Padding(1, 1).
 		Render(pb.progress.ViewAs(pb.percent))
@@ -82,7 +108,7 @@ func (pb progressBlock) View() string {
 func (m model) View() string {
 	renderedProgressBlocks := make([]string, len(m.progressBlocks))
 	for i := range m.progressBlocks {
-		renderedProgressBlocks[i] = m.progressBlocks[i].View()
+		renderedProgressBlocks[i] = m.progressBlocks[i].View(m.selected == i)
 	}
 	return lipgloss.JoinVertical(lipgloss.Top, renderedProgressBlocks...)
 }

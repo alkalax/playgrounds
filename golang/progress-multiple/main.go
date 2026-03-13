@@ -16,6 +16,7 @@ type model struct {
 }
 
 type progressBlock struct {
+	label    string
 	percent  float64
 	progress progress.Model
 	version  int
@@ -35,7 +36,7 @@ func tick(index, version int) tea.Cmd {
 func initialModel(n int) model {
 	progressBlocks := make([]progressBlock, n)
 	for i := range progressBlocks {
-		progressBlocks[i] = progressBlock{progress: progress.New()}
+		progressBlocks[i] = progressBlock{progress: progress.New(), label: fmt.Sprintf("Test %d", i)}
 	}
 	return model{
 		progressBlocks: progressBlocks,
@@ -57,9 +58,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case " ":
+			label := m.progressBlocks[m.selected].label
 			newVersion := m.progressBlocks[m.selected].version + 1
 			m.progressBlocks[m.selected] = progressBlock{
 				progress: progress.New(),
+				label:    label,
 				version:  newVersion,
 			}
 
@@ -92,23 +95,38 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (pb progressBlock) View(selected bool) string {
+func (pb progressBlock) View(width, height int, selected bool) string {
 	borderColor := lipgloss.Color("135")
 	if selected {
 		borderColor = lipgloss.Color("250")
 	}
+
+	renderedLabel := lipgloss.NewStyle().
+		Width(width - 1).
+		Height(height/2 - 1).
+		MarginBottom(1).
+		Render(pb.label)
+
+	renderedBar := lipgloss.NewStyle().
+		Width(width - 1).
+		Height(height/2 - 1).
+		Render(pb.progress.ViewAs(pb.percent))
+
 	return lipgloss.NewStyle().
+		Width(width).
+		Height(height).
+		Align(lipgloss.Center).
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(borderColor).
 		Foreground(lipgloss.Color("135")).
 		Padding(1, 1).
-		Render(pb.progress.ViewAs(pb.percent))
+		Render(lipgloss.JoinVertical(lipgloss.Top, renderedLabel, renderedBar))
 }
 
 func (m model) View() string {
 	renderedProgressBlocks := make([]string, len(m.progressBlocks))
 	for i := range m.progressBlocks {
-		renderedProgressBlocks[i] = m.progressBlocks[i].View(m.selected == i)
+		renderedProgressBlocks[i] = m.progressBlocks[i].View(50, 5, m.selected == i)
 	}
 	return lipgloss.JoinVertical(lipgloss.Top, renderedProgressBlocks...)
 }

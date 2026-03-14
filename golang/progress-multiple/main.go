@@ -13,6 +13,8 @@ import (
 type model struct {
 	progressBlocks []progressBlock
 	selected       int
+	width          int
+	height         int
 }
 
 type progressBlock struct {
@@ -53,6 +55,10 @@ func (m model) Init() tea.Cmd {
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -100,21 +106,23 @@ func (pb progressBlock) View(width, height int, selected bool) string {
 	if selected {
 		borderColor = lipgloss.Color("250")
 	}
+	blockWidth := width - 2
+	blockHeight := height - 2
 
 	renderedLabel := lipgloss.NewStyle().
-		Width(width - 1).
-		Height(height/2 - 1).
+		Width(blockWidth - 1).
+		Height(blockHeight/2 - 1).
 		MarginBottom(1).
 		Render(pb.label)
 
 	renderedBar := lipgloss.NewStyle().
-		Width(width - 1).
-		Height(height/2 - 1).
+		Width(blockWidth - 1).
+		Height(blockHeight/2 - 1).
 		Render(pb.progress.ViewAs(pb.percent))
 
 	return lipgloss.NewStyle().
-		Width(width).
-		Height(height).
+		Width(blockWidth).
+		Height(blockHeight).
 		Align(lipgloss.Center).
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(borderColor).
@@ -126,7 +134,7 @@ func (pb progressBlock) View(width, height int, selected bool) string {
 func (m model) View() string {
 	renderedProgressBlocks := make([]string, len(m.progressBlocks))
 	for i := range m.progressBlocks {
-		renderedProgressBlocks[i] = m.progressBlocks[i].View(50, 5, m.selected == i)
+		renderedProgressBlocks[i] = m.progressBlocks[i].View(min(50, m.width), min(5, m.height/len(m.progressBlocks)), m.selected == i)
 	}
 	return lipgloss.JoinVertical(lipgloss.Top, renderedProgressBlocks...)
 }

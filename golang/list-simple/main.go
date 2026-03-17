@@ -35,6 +35,12 @@ func initialModel() tea.Model {
 		item{title: "Washington", desc: "USA"},
 		item{title: "Moscow", desc: "Russia"},
 		item{title: "Paris", desc: "France"},
+		item{title: "Tokyo", desc: "Japan"},
+		item{title: "Berlin", desc: "Germany"},
+		item{title: "London", desc: "UK"},
+		item{title: "Beijing", desc: "China"},
+		item{title: "Budapest", desc: "Hungary"},
+		item{title: "Buenos Aires", desc: "Argentina"},
 	}
 	m := model{list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
 	m.list.Title = "Capital Cities"
@@ -50,7 +56,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height)
-		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -58,7 +63,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	return m, nil
+	var cmd tea.Cmd
+	m.list, cmd = m.list.Update(msg)
+	return m, cmd
 }
 
 func (m model) View() string {

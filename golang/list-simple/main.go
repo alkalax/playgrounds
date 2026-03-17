@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
@@ -29,14 +32,52 @@ func (i item) FilterValue() string {
 	return i.title
 }
 
+type itemDelegate struct{}
+
+func (d itemDelegate) Height() int {
+	return 1
+}
+
+func (d itemDelegate) Spacing() int {
+	return 0
+}
+
+func (d itemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd {
+	return nil
+}
+
+func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
+	i, ok := listItem.(item)
+	if !ok {
+		return
+	}
+
+	str := fmt.Sprintf("%2.d. %s", index+1, i.title)
+
+	fn := lipgloss.NewStyle().Render
+	if index == m.Index() {
+		fn = func(s ...string) string {
+			return lipgloss.NewStyle().Render(">" + strings.Join(s, " "))
+		}
+	}
+
+	fmt.Fprint(w, fn(str))
+}
+
 func initialModel() tea.Model {
 	items := []list.Item{
 		item{title: "Belgrade", desc: "Serbia"},
 		item{title: "Washington", desc: "USA"},
 		item{title: "Moscow", desc: "Russia"},
 		item{title: "Paris", desc: "France"},
+		item{title: "Tokyo", desc: "Japan"},
+		item{title: "Berlin", desc: "Germany"},
+		item{title: "London", desc: "UK"},
+		item{title: "Beijing", desc: "China"},
+		item{title: "Budapest", desc: "Hungary"},
+		item{title: "Buenos Aires", desc: "Argentina"},
 	}
-	m := model{list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
+	m := model{list: list.New(items, itemDelegate{}, 0, 0)}
 	m.list.Title = "Capital Cities"
 
 	return m
@@ -50,7 +91,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height)
-		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -58,7 +98,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	return m, nil
+	var cmd tea.Cmd
+	m.list, cmd = m.list.Update(msg)
+	return m, cmd
 }
 
 func (m model) View() string {

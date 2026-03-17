@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
@@ -29,6 +32,38 @@ func (i item) FilterValue() string {
 	return i.title
 }
 
+type itemDelegate struct{}
+
+func (d itemDelegate) Height() int {
+	return 1
+}
+
+func (d itemDelegate) Spacing() int {
+	return 0
+}
+
+func (d itemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd {
+	return nil
+}
+
+func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
+	i, ok := listItem.(item)
+	if !ok {
+		return
+	}
+
+	str := fmt.Sprintf("%2.d. %s", index+1, i.title)
+
+	fn := lipgloss.NewStyle().Render
+	if index == m.Index() {
+		fn = func(s ...string) string {
+			return lipgloss.NewStyle().Render(">" + strings.Join(s, " "))
+		}
+	}
+
+	fmt.Fprint(w, fn(str))
+}
+
 func initialModel() tea.Model {
 	items := []list.Item{
 		item{title: "Belgrade", desc: "Serbia"},
@@ -42,7 +77,7 @@ func initialModel() tea.Model {
 		item{title: "Budapest", desc: "Hungary"},
 		item{title: "Buenos Aires", desc: "Argentina"},
 	}
-	m := model{list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
+	m := model{list: list.New(items, itemDelegate{}, 0, 0)}
 	m.list.Title = "Capital Cities"
 
 	return m

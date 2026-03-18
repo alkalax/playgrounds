@@ -3,16 +3,17 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type model struct {
-	content string
+	currentDir string
 }
 
 func initialModel() model {
-	return model{content: "test"}
+	return model{currentDir: "/"}
 }
 
 func (m model) Init() tea.Cmd {
@@ -31,8 +32,30 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func getEntries(path string) []string {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		panic(err)
+	}
+
+	entryNames := []string{}
+	for _, entry := range entries {
+		entryNames = append(entryNames, entry.Name())
+	}
+
+	return entryNames
+}
+
 func (m model) View() string {
-	return m.content
+	var sb strings.Builder
+	sb.WriteString(m.currentDir)
+	sb.WriteString("\n\n")
+	for _, entry := range getEntries(m.currentDir) {
+		sb.WriteString(entry)
+		sb.WriteString("\n")
+	}
+
+	return sb.String()
 }
 
 func main() {

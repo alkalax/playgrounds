@@ -6,14 +6,27 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
 	currentDir string
+	contents   dirContent
+}
+
+type dirContent struct {
+	entries []os.DirEntry
 }
 
 func initialModel() model {
-	return model{currentDir: "/"}
+	entries, err := os.ReadDir("/")
+	if err != nil {
+		panic(err)
+	}
+	return model{
+		currentDir: "/",
+		contents:   dirContent{entries},
+	}
 }
 
 func (m model) Init() tea.Cmd {
@@ -38,24 +51,43 @@ func getEntries(path string) []string {
 		panic(err)
 	}
 
-	entryNames := []string{}
+	renderedEntries := []string{}
 	for _, entry := range entries {
-		entryNames = append(entryNames, entry.Name())
+		color := lipgloss.Color("255")
+		if entry.IsDir() {
+			color = lipgloss.Color("25")
+		}
+		renderedEntries = append(renderedEntries, lipgloss.NewStyle().Foreground(color).Render(entry.Name()))
 	}
 
-	return entryNames
+	return renderedEntries
 }
 
-func (m model) View() string {
+func (dc *dirContent) View() string {
 	var sb strings.Builder
-	sb.WriteString(m.currentDir)
-	sb.WriteString("\n\n")
-	for _, entry := range getEntries(m.currentDir) {
-		sb.WriteString(entry)
+	for _, entry := range dc.entries {
+		color := lipgloss.Color("255")
+		if entry.IsDir() {
+			color = lipgloss.Color("25")
+		}
+		sb.WriteString(lipgloss.NewStyle().Foreground(color).Render(entry.Name()))
 		sb.WriteString("\n")
 	}
 
 	return sb.String()
+}
+
+func (m model) View() string {
+	//var sb strings.Builder
+	//sb.WriteString(m.currentDir)
+	//sb.WriteString("\n\n")
+	//for _, entry := range getEntries(m.currentDir) {
+	//	sb.WriteString(entry)
+	//	sb.WriteString("\n")
+	//}
+
+	//return sb.String()
+	return fmt.Sprintf("\t%s\n\n%s", m.currentDir, m.contents.View())
 }
 
 func main() {

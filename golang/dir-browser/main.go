@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
@@ -38,12 +39,16 @@ func getEntries(path string) []string {
 		panic(err)
 	}
 
-	entryNames := []string{}
+	renderedEntries := []string{}
 	for _, entry := range entries {
-		entryNames = append(entryNames, entry.Name())
+		color := lipgloss.Color("255")
+		if entry.IsDir() {
+			color = lipgloss.Color("25")
+		}
+		renderedEntries = append(renderedEntries, lipgloss.NewStyle().Foreground(color).Render(entry.Name()))
 	}
 
-	return entryNames
+	return renderedEntries
 }
 
 func (m model) View() string {

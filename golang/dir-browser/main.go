@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -14,6 +15,7 @@ type model struct {
 	currentDir string
 	focused    int
 	entries    []os.DirEntry
+	viewport   viewport.Model
 }
 
 func getDirContent(path string) []os.DirEntry {
@@ -28,6 +30,7 @@ func getDirContent(path string) []os.DirEntry {
 func initialModel() model {
 	m := model{currentDir: "/"}
 	m.entries = getDirContent(m.currentDir)
+	m.viewport = viewport.New(0, 0)
 
 	return m
 }
@@ -38,6 +41,10 @@ func (m model) Init() tea.Cmd {
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.viewport.Width = msg.Width
+		m.viewport.Height = msg.Height - 4
+		m.viewport.SetContent(m.renderEntries())
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -45,21 +52,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "j", "down":
 			if m.focused < len(m.entries)-1 {
 				m.focused++
+				m.viewport.SetContent(m.renderEntries())
 			}
-			return m, nil
 		case "k", "up":
 			if m.focused > 0 {
 				m.focused--
+				m.viewport.SetContent(m.renderEntries())
 			}
-			return m, nil
 		case " ":
 			focusedEntry := m.entries[m.focused]
 			if focusedEntry.IsDir() {
 				m.currentDir = filepath.Join(m.currentDir, focusedEntry.Name())
 				m.entries = getDirContent(m.currentDir)
+				m.focused = 0
+				m.viewport.SetContent(m.renderEntries())
+				m.viewport.GotoTop()
 			}
-			return m, nil
 		}
+
+		var cmd tea.Cmd
+		m.viewport, cmd = m.viewport.Update(msg)
+		return m, cmd
 	}
 
 	return m, nil
@@ -83,7 +96,7 @@ func getEntries(path string) []string {
 	return renderedEntries
 }
 
-func (m model) renderEntries(focused int) string {
+func (m model) renderEntries() string {
 	var sb strings.Builder
 	for i, entry := range m.entries {
 		color := lipgloss.Color("255")
@@ -91,7 +104,7 @@ func (m model) renderEntries(focused int) string {
 			color = lipgloss.Color("25")
 		}
 		entryStyle := lipgloss.NewStyle().Foreground(color)
-		if focused == i {
+		if m.focused == i {
 			entryStyle = entryStyle.Background(lipgloss.Color("2"))
 		}
 		sb.WriteString(entryStyle.Render(entry.Name()))
@@ -102,7 +115,7 @@ func (m model) renderEntries(focused int) string {
 }
 
 func (m model) View() string {
-	return fmt.Sprintf("\t%s\n\n%s", m.currentDir, m.renderEntries(m.focused))
+	return fmt.Sprintf("\t%s\n\n%s", m.currentDir, m.viewport.View())
 }
 
 func main() {

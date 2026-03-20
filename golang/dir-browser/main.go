@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -11,23 +12,24 @@ import (
 
 type model struct {
 	currentDir string
-	contents   dirContent
 	focused    int
+	entries    []os.DirEntry
 }
 
-type dirContent struct {
-	entries []os.DirEntry
-}
-
-func initialModel() model {
-	entries, err := os.ReadDir("/")
+func getDirContent(path string) []os.DirEntry {
+	entries, err := os.ReadDir(path)
 	if err != nil {
 		panic(err)
 	}
-	return model{
-		currentDir: "/",
-		contents:   dirContent{entries},
-	}
+
+	return entries
+}
+
+func initialModel() model {
+	m := model{currentDir: "/"}
+	m.entries = getDirContent(m.currentDir)
+
+	return m
 }
 
 func (m model) Init() tea.Cmd {
@@ -41,13 +43,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "j", "down":
-			if m.focused < len(m.contents.entries)-1 {
+			if m.focused < len(m.entries)-1 {
 				m.focused++
 			}
 			return m, nil
 		case "k", "up":
 			if m.focused > 0 {
 				m.focused--
+			}
+			return m, nil
+		case " ":
+			focusedEntry := m.entries[m.focused]
+			if focusedEntry.IsDir() {
+				m.currentDir = filepath.Join(m.currentDir, focusedEntry.Name())
+				m.entries = getDirContent(m.currentDir)
 			}
 			return m, nil
 		}
@@ -74,9 +83,9 @@ func getEntries(path string) []string {
 	return renderedEntries
 }
 
-func (dc *dirContent) View(focused int) string {
+func (m model) renderEntries(focused int) string {
 	var sb strings.Builder
-	for i, entry := range dc.entries {
+	for i, entry := range m.entries {
 		color := lipgloss.Color("255")
 		if entry.IsDir() {
 			color = lipgloss.Color("25")
@@ -93,16 +102,7 @@ func (dc *dirContent) View(focused int) string {
 }
 
 func (m model) View() string {
-	//var sb strings.Builder
-	//sb.WriteString(m.currentDir)
-	//sb.WriteString("\n\n")
-	//for _, entry := range getEntries(m.currentDir) {
-	//	sb.WriteString(entry)
-	//	sb.WriteString("\n")
-	//}
-
-	//return sb.String()
-	return fmt.Sprintf("\t%s\n\n%s", m.currentDir, m.contents.View(m.focused))
+	return fmt.Sprintf("\t%s\n\n%s", m.currentDir, m.renderEntries(m.focused))
 }
 
 func main() {

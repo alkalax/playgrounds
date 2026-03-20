@@ -40,6 +40,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "j", "down":
+			if m.focused < len(m.contents.entries)-1 {
+				m.focused++
+			}
+			return m, nil
+		case "k", "up":
+			if m.focused > 0 {
+				m.focused--
+			}
+			return m, nil
 		}
 	}
 
@@ -73,7 +83,7 @@ func (dc *dirContent) View(focused int) string {
 		}
 		entryStyle := lipgloss.NewStyle().Foreground(color)
 		if focused == i {
-			entryStyle = entryStyle.Background(lipgloss.Color("1"))
+			entryStyle = entryStyle.Background(lipgloss.Color("2"))
 		}
 		sb.WriteString(entryStyle.Render(entry.Name()))
 		sb.WriteString("\n")

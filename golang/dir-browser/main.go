@@ -12,6 +12,7 @@ import (
 type model struct {
 	currentDir string
 	contents   dirContent
+	focused    int
 }
 
 type dirContent struct {
@@ -63,14 +64,18 @@ func getEntries(path string) []string {
 	return renderedEntries
 }
 
-func (dc *dirContent) View() string {
+func (dc *dirContent) View(focused int) string {
 	var sb strings.Builder
-	for _, entry := range dc.entries {
+	for i, entry := range dc.entries {
 		color := lipgloss.Color("255")
 		if entry.IsDir() {
 			color = lipgloss.Color("25")
 		}
-		sb.WriteString(lipgloss.NewStyle().Foreground(color).Render(entry.Name()))
+		entryStyle := lipgloss.NewStyle().Foreground(color)
+		if focused == i {
+			entryStyle = entryStyle.Background(lipgloss.Color("1"))
+		}
+		sb.WriteString(entryStyle.Render(entry.Name()))
 		sb.WriteString("\n")
 	}
 
@@ -87,7 +92,7 @@ func (m model) View() string {
 	//}
 
 	//return sb.String()
-	return fmt.Sprintf("\t%s\n\n%s", m.currentDir, m.contents.View())
+	return fmt.Sprintf("\t%s\n\n%s", m.currentDir, m.contents.View(m.focused))
 }
 
 func main() {

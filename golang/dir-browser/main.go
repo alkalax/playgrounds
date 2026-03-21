@@ -47,7 +47,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.viewport.SetContent(m.renderEntries())
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
+		case "ctrl+c":
 			return m, tea.Quit
 		case "j", "down":
 			if m.focused < len(m.entries)-1 {
@@ -63,6 +63,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			focusedEntry := m.entries[m.focused]
 			if focusedEntry.IsDir() {
 				m.currentDir = filepath.Join(m.currentDir, focusedEntry.Name())
+				m.entries = getDirContent(m.currentDir)
+				m.focused = 0
+				m.viewport.SetContent(m.renderEntries())
+				m.viewport.GotoTop()
+			}
+		case "q":
+			if m.currentDir != "/" {
+				m.currentDir = filepath.Dir(m.currentDir)
 				m.entries = getDirContent(m.currentDir)
 				m.focused = 0
 				m.viewport.SetContent(m.renderEntries())

@@ -23,15 +23,17 @@ type Sidebar struct {
 	width      int
 	height     int
 	namespaces []string
+	focused    int
 }
 
 type Main struct {
 	width  int
 	height int
+	pods   []string
 }
 
 func initialModel() model {
-	return model{
+	m := model{
 		Dashboard{
 			sidebar: Sidebar{
 				namespaces: getNamespaces(),
@@ -39,6 +41,10 @@ func initialModel() model {
 			main: Main{},
 		},
 	}
+
+	m.dashboard.main.pods = getPods(m.dashboard.sidebar.namespaces[0])
+
+	return m
 }
 
 func (m model) Init() tea.Cmd {
@@ -79,11 +85,21 @@ func (s Sidebar) View(width, height int) string {
 }
 
 func (m Main) View(width, height int) string {
+	renderedPods := []string{}
+	for _, pod := range m.pods {
+		renderedPods = append(renderedPods,
+			lipgloss.NewStyle().
+				Width(width-2).
+				Align(lipgloss.Center).
+				Render(pod),
+		)
+	}
+
 	return lipgloss.NewStyle().
 		Width(width - 2).
 		Height(height - 2).
 		Border(lipgloss.RoundedBorder()).
-		Render("")
+		Render(lipgloss.JoinVertical(lipgloss.Top, renderedPods...))
 }
 
 func (d Dashboard) View() string {

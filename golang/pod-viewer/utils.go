@@ -39,3 +39,34 @@ func getNamespaces() []string {
 
 	return namespaces
 }
+
+func getPods(namespace string) []string {
+	url := fmt.Sprintf("%s/api/v1/namespaces/%s/pods", server, namespace)
+	resp, err := http.Get(url)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		panic(fmt.Sprintf("error: %s", body))
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	var podList PodList
+	if err := json.Unmarshal(body, &podList); err != nil {
+		panic(err)
+	}
+
+	pods := []string{}
+	for _, pod := range podList.Items {
+		pods = append(pods, pod.Metadata.Name)
+	}
+
+	return pods
+}

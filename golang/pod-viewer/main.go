@@ -60,6 +60,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "j", "down":
+			if m.dashboard.sidebar.focused < len(m.dashboard.sidebar.namespaces)-1 {
+				m.dashboard.sidebar.focused++
+				newNs := m.dashboard.sidebar.namespaces[m.dashboard.sidebar.focused]
+				m.dashboard.main.pods = getPods(newNs)
+			}
+		case "k", "up":
+			if m.dashboard.sidebar.focused > 0 {
+				m.dashboard.sidebar.focused--
+				newNs := m.dashboard.sidebar.namespaces[m.dashboard.sidebar.focused]
+				m.dashboard.main.pods = getPods(newNs)
+			}
 		}
 	}
 
@@ -68,13 +80,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (s Sidebar) View(width, height int) string {
 	renderedNamespaces := []string{}
-	for _, ns := range s.namespaces {
-		renderedNamespaces = append(renderedNamespaces,
-			lipgloss.NewStyle().
-				Width(width-2).
-				Align(lipgloss.Center).
-				Render(ns),
-		)
+	for i, ns := range s.namespaces {
+		style := lipgloss.NewStyle().
+			Width(width - 2).
+			Align(lipgloss.Center)
+		if i == s.focused {
+			style = style.Background(lipgloss.Color("2"))
+		}
+		renderedNamespaces = append(renderedNamespaces, style.Render(ns))
 	}
 
 	return lipgloss.NewStyle().

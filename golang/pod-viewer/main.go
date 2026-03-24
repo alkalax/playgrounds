@@ -85,7 +85,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.dashboard.main.pods = getPods(newNs)
 				}
 			} else {
-				if m.dashboard.main.index < len(m.dashboard.main.pods)-1 {
+				if m.dashboard.main.podView && m.dashboard.main.index < len(m.dashboard.main.pods)-1 {
 					m.dashboard.main.index++
 				}
 			}
@@ -97,7 +97,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.dashboard.main.pods = getPods(newNs)
 				}
 			} else {
-				if m.dashboard.main.index > 0 {
+				if m.dashboard.main.podView && m.dashboard.main.index > 0 {
 					m.dashboard.main.index--
 				}
 			}

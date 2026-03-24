@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 var server = "http://127.0.0.1:8001"
@@ -69,4 +70,25 @@ func getPods(namespace string) []string {
 	}
 
 	return pods
+}
+
+func getLogs(namespace, pod string) []string {
+	url := fmt.Sprintf("%s/api/v1/namespaces/%s/pods/%s/log", server, namespace, pod)
+	resp, err := http.Get(url)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		panic(fmt.Sprintf("error: %s", body))
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	return strings.Split(string(body), "\n")
 }

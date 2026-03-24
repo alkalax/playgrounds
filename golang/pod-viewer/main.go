@@ -35,10 +35,12 @@ type Sidebar struct {
 }
 
 type Main struct {
-	width  int
-	height int
-	pods   []string
-	index  int
+	width    int
+	height   int
+	pods     []string
+	index    int
+	logLines []string
+	podView  bool
 }
 
 func initialModel() model {
@@ -47,7 +49,10 @@ func initialModel() model {
 			sidebar: Sidebar{
 				namespaces: getNamespaces(),
 			},
-			main: Main{},
+			main: Main{
+				podView:  true,
+				logLines: []string{},
+			},
 		},
 	}
 
@@ -97,10 +102,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.dashboard.selectedPane == SidebarPane {
 				m.dashboard.selectedPane = MainPane
 				m.dashboard.main.index = 0
+			} else if m.dashboard.main.podView {
+				namespace := m.dashboard.sidebar.namespaces[m.dashboard.sidebar.index]
+				pod := m.dashboard.main.pods[m.dashboard.main.index]
+				m.dashboard.main.logLines = getLogs(namespace, pod)
+				m.dashboard.main.podView = false
 			}
 		case "q":
 			if m.dashboard.selectedPane == MainPane {
-				m.dashboard.selectedPane = SidebarPane
+				if m.dashboard.main.podView {
+					m.dashboard.selectedPane = SidebarPane
+				} else {
+					m.dashboard.main.podView = true
+					m.dashboard.main.logLines = []string{}
+				}
 			}
 		}
 	}
@@ -132,17 +147,6 @@ func (s Sidebar) View(width, height int, focused bool) string {
 }
 
 func (m Main) View(width, height int, focused bool) string {
-	renderedPods := []string{}
-	for i, pod := range m.pods {
-		podStyle := lipgloss.NewStyle().
-			Width(width - 2).
-			Align(lipgloss.Center)
-		if focused && i == m.index {
-			podStyle = podStyle.Background(lipgloss.Color("2"))
-		}
-		renderedPods = append(renderedPods, podStyle.Render(pod))
-	}
-
 	style := lipgloss.NewStyle().
 		Width(width - 2).
 		Height(height - 2).
@@ -151,7 +155,32 @@ func (m Main) View(width, height int, focused bool) string {
 		style = style.BorderForeground(lipgloss.Color("10"))
 	}
 
-	return style.Render(lipgloss.JoinVertical(lipgloss.Top, renderedPods...))
+	if m.podView {
+		renderedPods := []string{}
+		for i, pod := range m.pods {
+			podStyle := lipgloss.NewStyle().
+				Width(width - 2).
+				Align(lipgloss.Center)
+			if focused && i == m.index {
+				podStyle = podStyle.Background(lipgloss.Color("2"))
+			}
+			renderedPods = append(renderedPods, podStyle.Render(pod))
+		}
+
+		return style.Render(lipgloss.JoinVertical(lipgloss.Top, renderedPods...))
+	} else {
+		maxLineWidth := width - 4
+		maxLines := height - 2
+		renderedLogLines := []string{}
+		for _, line := range m.logLines[len(m.logLines)-maxLines:] {
+			renderedLine := line
+			if len(renderedLine) > maxLineWidth {
+				renderedLine = renderedLine[:maxLineWidth]
+			}
+			renderedLogLines = append(renderedLogLines, lipgloss.NewStyle().Width(maxLineWidth).Render(renderedLine))
+		}
+		return style.Render(lipgloss.JoinVertical(lipgloss.Top, renderedLogLines...))
+	}
 }
 
 func (d Dashboard) View() string {

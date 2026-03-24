@@ -12,24 +12,33 @@ type model struct {
 	dashboard Dashboard
 }
 
+type Pane int
+
+const (
+	SidebarPane Pane = iota
+	MainPane
+)
+
 type Dashboard struct {
-	width   int
-	height  int
-	sidebar Sidebar
-	main    Main
+	width        int
+	height       int
+	selectedPane Pane
+	sidebar      Sidebar
+	main         Main
 }
 
 type Sidebar struct {
 	width      int
 	height     int
 	namespaces []string
-	focused    int
+	index      int
 }
 
 type Main struct {
 	width  int
 	height int
 	pods   []string
+	index  int
 }
 
 func initialModel() model {
@@ -61,16 +70,35 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "j", "down":
-			if m.dashboard.sidebar.focused < len(m.dashboard.sidebar.namespaces)-1 {
-				m.dashboard.sidebar.focused++
-				newNs := m.dashboard.sidebar.namespaces[m.dashboard.sidebar.focused]
-				m.dashboard.main.pods = getPods(newNs)
+			if m.dashboard.selectedPane == SidebarPane {
+				if m.dashboard.sidebar.index < len(m.dashboard.sidebar.namespaces)-1 {
+					m.dashboard.sidebar.index++
+					newNs := m.dashboard.sidebar.namespaces[m.dashboard.sidebar.index]
+					m.dashboard.main.pods = getPods(newNs)
+				}
+			} else {
+				if m.dashboard.main.index < len(m.dashboard.main.pods)-1 {
+					m.dashboard.main.index++
+				}
 			}
 		case "k", "up":
-			if m.dashboard.sidebar.focused > 0 {
-				m.dashboard.sidebar.focused--
-				newNs := m.dashboard.sidebar.namespaces[m.dashboard.sidebar.focused]
-				m.dashboard.main.pods = getPods(newNs)
+			if m.dashboard.selectedPane == SidebarPane {
+				if m.dashboard.sidebar.index > 0 {
+					m.dashboard.sidebar.index--
+					newNs := m.dashboard.sidebar.namespaces[m.dashboard.sidebar.index]
+					m.dashboard.main.pods = getPods(newNs)
+				}
+			} else {
+				if m.dashboard.main.index > 0 {
+					m.dashboard.main.index--
+				}
+			}
+		case "tab":
+			if m.dashboard.selectedPane == SidebarPane {
+				m.dashboard.selectedPane = MainPane
+				m.dashboard.main.index = 0
+			} else {
+				m.dashboard.selectedPane = SidebarPane
 			}
 		}
 	}
@@ -78,46 +106,55 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (s Sidebar) View(width, height int) string {
+func (s Sidebar) View(width, height int, focused bool) string {
 	renderedNamespaces := []string{}
 	for i, ns := range s.namespaces {
-		style := lipgloss.NewStyle().
+		nsStyle := lipgloss.NewStyle().
 			Width(width - 2).
 			Align(lipgloss.Center)
-		if i == s.focused {
-			style = style.Background(lipgloss.Color("2"))
+		if focused && i == s.index {
+			nsStyle = nsStyle.Background(lipgloss.Color("2"))
 		}
-		renderedNamespaces = append(renderedNamespaces, style.Render(ns))
+		renderedNamespaces = append(renderedNamespaces, nsStyle.Render(ns))
 	}
 
-	return lipgloss.NewStyle().
+	style := lipgloss.NewStyle().
 		Width(width - 2).
 		Height(height - 2).
-		Border(lipgloss.RoundedBorder()).
-		Render(lipgloss.JoinVertical(lipgloss.Top, renderedNamespaces...))
+		Border(lipgloss.RoundedBorder())
+	if focused {
+		style = style.BorderForeground(lipgloss.Color("10"))
+	}
+
+	return style.Render(lipgloss.JoinVertical(lipgloss.Top, renderedNamespaces...))
 }
 
-func (m Main) View(width, height int) string {
+func (m Main) View(width, height int, focused bool) string {
 	renderedPods := []string{}
-	for _, pod := range m.pods {
-		renderedPods = append(renderedPods,
-			lipgloss.NewStyle().
-				Width(width-2).
-				Align(lipgloss.Center).
-				Render(pod),
-		)
+	for i, pod := range m.pods {
+		podStyle := lipgloss.NewStyle().
+			Width(width - 2).
+			Align(lipgloss.Center)
+		if focused && i == m.index {
+			podStyle = podStyle.Background(lipgloss.Color("2"))
+		}
+		renderedPods = append(renderedPods, podStyle.Render(pod))
 	}
 
-	return lipgloss.NewStyle().
+	style := lipgloss.NewStyle().
 		Width(width - 2).
 		Height(height - 2).
-		Border(lipgloss.RoundedBorder()).
-		Render(lipgloss.JoinVertical(lipgloss.Top, renderedPods...))
+		Border(lipgloss.RoundedBorder())
+	if focused {
+		style = style.BorderForeground(lipgloss.Color("10"))
+	}
+
+	return style.Render(lipgloss.JoinVertical(lipgloss.Top, renderedPods...))
 }
 
 func (d Dashboard) View() string {
-	renderedSidebar := d.sidebar.View(d.width*1/5, d.height)
-	renderedMain := d.main.View(d.width*4/5, d.height)
+	renderedSidebar := d.sidebar.View(d.width*1/5, d.height, d.selectedPane == SidebarPane)
+	renderedMain := d.main.View(d.width*4/5, d.height, d.selectedPane == MainPane)
 
 	return lipgloss.JoinHorizontal(lipgloss.Left, renderedSidebar, renderedMain)
 }

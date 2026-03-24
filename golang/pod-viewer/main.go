@@ -67,7 +67,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.dashboard.height = msg.Height
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
+		case "ctrl+c":
 			return m, tea.Quit
 		case "j", "down":
 			if m.dashboard.selectedPane == SidebarPane {
@@ -93,11 +93,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.dashboard.main.index--
 				}
 			}
-		case "tab":
+		case " ":
 			if m.dashboard.selectedPane == SidebarPane {
 				m.dashboard.selectedPane = MainPane
 				m.dashboard.main.index = 0
-			} else {
+			}
+		case "q":
+			if m.dashboard.selectedPane == MainPane {
 				m.dashboard.selectedPane = SidebarPane
 			}
 		}

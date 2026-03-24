@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -35,12 +37,13 @@ type Sidebar struct {
 }
 
 type Main struct {
-	width    int
-	height   int
-	pods     []string
-	index    int
-	logLines []string
-	podView  bool
+	width       int
+	height      int
+	pods        []string
+	index       int
+	logViewport viewport.Model
+	logLines    []string
+	podView     bool
 }
 
 func initialModel() model {
@@ -106,6 +109,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				namespace := m.dashboard.sidebar.namespaces[m.dashboard.sidebar.index]
 				pod := m.dashboard.main.pods[m.dashboard.main.index]
 				m.dashboard.main.logLines = getLogs(namespace, pod)
+				//m.dashboard.main.logViewport = viewport.New(m.dashboard.width-2, m.dashboard.height-2)
+				//m.dashboard.main.logViewport.SetContent(strings.Join(m.dashboard.main.logLines, "\n"))
 				m.dashboard.main.podView = false
 			}
 		case "q":
@@ -169,17 +174,10 @@ func (m Main) View(width, height int, focused bool) string {
 
 		return style.Render(lipgloss.JoinVertical(lipgloss.Top, renderedPods...))
 	} else {
-		maxLineWidth := width - 4
-		maxLines := height - 2
-		renderedLogLines := []string{}
-		for _, line := range m.logLines[len(m.logLines)-maxLines:] {
-			renderedLine := line
-			if len(renderedLine) > maxLineWidth {
-				renderedLine = renderedLine[:maxLineWidth]
-			}
-			renderedLogLines = append(renderedLogLines, lipgloss.NewStyle().Width(maxLineWidth).Render(renderedLine))
-		}
-		return style.Render(lipgloss.JoinVertical(lipgloss.Top, renderedLogLines...))
+		m.logViewport = viewport.New(width-2, height-2)
+		m.logViewport.SetContent(strings.Join(m.logLines, "\n"))
+		m.logViewport.GotoBottom()
+		return style.Render(m.logViewport.View())
 	}
 }
 

@@ -10,6 +10,10 @@ import (
 
 var server = "http://127.0.0.1:8001"
 
+type K8sStatus struct {
+	Message string `json:"message"`
+}
+
 func getNamespaces() []string {
 	url := server + "/api/v1/namespaces"
 	resp, err := http.Get(url)
@@ -82,7 +86,23 @@ func getLogs(namespace, pod string) []string {
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		panic(fmt.Sprintf("error: %s", body))
+		var status K8sStatus
+		if err := json.Unmarshal(body, &status); err != nil {
+			panic(fmt.Sprintf("failed to parse error: %s", string(body)))
+		}
+		start := strings.Index(status.Message, "[")
+		end := strings.Index(status.Message, "]")
+		if start == -1 || end == -1 || start >= end {
+			panic(fmt.Sprintf("error: %s", status.Message))
+		}
+
+		container := strings.Fields(status.Message[start+1 : end])[0]
+		url := fmt.Sprintf("%s/api/v1/namespaces/%s/pods/%s/log?container=%s", server, namespace, pod, container)
+		resp, err = http.Get(url)
+		if err != nil {
+			panic(err)
+		}
+		defer resp.Body.Close()
 	}
 
 	body, err := io.ReadAll(resp.Body)

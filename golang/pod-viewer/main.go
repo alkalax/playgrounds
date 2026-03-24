@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -35,12 +37,13 @@ type Sidebar struct {
 }
 
 type Main struct {
-	width    int
-	height   int
-	pods     []string
-	index    int
-	logLines []string
-	podView  bool
+	width       int
+	height      int
+	pods        []string
+	index       int
+	logViewport viewport.Model
+	logLines    []string
+	podView     bool
 }
 
 func initialModel() model {
@@ -70,6 +73,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.dashboard.width = msg.Width
 		m.dashboard.height = msg.Height
+		m.dashboard.sidebar.width = msg.Width * 1 / 5
+		m.dashboard.sidebar.height = msg.Height
+		m.dashboard.main.width = msg.Width * 4 / 5
+		m.dashboard.main.height = msg.Height
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -82,7 +89,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.dashboard.main.pods = getPods(newNs)
 				}
 			} else {
-				if m.dashboard.main.index < len(m.dashboard.main.pods)-1 {
+				if m.dashboard.main.podView && m.dashboard.main.index < len(m.dashboard.main.pods)-1 {
 					m.dashboard.main.index++
 				}
 			}
@@ -94,7 +101,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.dashboard.main.pods = getPods(newNs)
 				}
 			} else {
-				if m.dashboard.main.index > 0 {
+				if m.dashboard.main.podView && m.dashboard.main.index > 0 {
 					m.dashboard.main.index--
 				}
 			}
@@ -106,6 +113,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				namespace := m.dashboard.sidebar.namespaces[m.dashboard.sidebar.index]
 				pod := m.dashboard.main.pods[m.dashboard.main.index]
 				m.dashboard.main.logLines = getLogs(namespace, pod)
+				m.dashboard.main.logViewport = viewport.New(m.dashboard.main.width-2, m.dashboard.height-2)
+				m.dashboard.main.logViewport.SetContent(strings.Join(m.dashboard.main.logLines, "\n"))
+				m.dashboard.main.logViewport.GotoBottom()
 				m.dashboard.main.podView = false
 			}
 		case "q":
@@ -120,14 +130,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	return m, nil
+	var cmd tea.Cmd
+	m.dashboard.main.logViewport, cmd = m.dashboard.main.logViewport.Update(msg)
+	return m, cmd
 }
 
-func (s Sidebar) View(width, height int, focused bool) string {
+func (s Sidebar) View(focused bool) string {
 	renderedNamespaces := []string{}
 	for i, ns := range s.namespaces {
 		nsStyle := lipgloss.NewStyle().
-			Width(width - 2).
+			Width(s.width - 2).
 			Align(lipgloss.Center)
 		if focused && i == s.index {
 			nsStyle = nsStyle.Background(lipgloss.Color("2"))
@@ -136,8 +148,8 @@ func (s Sidebar) View(width, height int, focused bool) string {
 	}
 
 	style := lipgloss.NewStyle().
-		Width(width - 2).
-		Height(height - 2).
+		Width(s.width - 2).
+		Height(s.height - 2).
 		Border(lipgloss.RoundedBorder())
 	if focused {
 		style = style.BorderForeground(lipgloss.Color("10"))
@@ -146,10 +158,10 @@ func (s Sidebar) View(width, height int, focused bool) string {
 	return style.Render(lipgloss.JoinVertical(lipgloss.Top, renderedNamespaces...))
 }
 
-func (m Main) View(width, height int, focused bool) string {
+func (m Main) View(focused bool) string {
 	style := lipgloss.NewStyle().
-		Width(width - 2).
-		Height(height - 2).
+		Width(m.width - 2).
+		Height(m.height - 2).
 		Border(lipgloss.RoundedBorder())
 	if focused {
 		style = style.BorderForeground(lipgloss.Color("10"))
@@ -159,7 +171,7 @@ func (m Main) View(width, height int, focused bool) string {
 		renderedPods := []string{}
 		for i, pod := range m.pods {
 			podStyle := lipgloss.NewStyle().
-				Width(width - 2).
+				Width(m.width - 2).
 				Align(lipgloss.Center)
 			if focused && i == m.index {
 				podStyle = podStyle.Background(lipgloss.Color("2"))
@@ -169,23 +181,13 @@ func (m Main) View(width, height int, focused bool) string {
 
 		return style.Render(lipgloss.JoinVertical(lipgloss.Top, renderedPods...))
 	} else {
-		maxLineWidth := width - 4
-		maxLines := height - 2
-		renderedLogLines := []string{}
-		for _, line := range m.logLines[len(m.logLines)-maxLines:] {
-			renderedLine := line
-			if len(renderedLine) > maxLineWidth {
-				renderedLine = renderedLine[:maxLineWidth]
-			}
-			renderedLogLines = append(renderedLogLines, lipgloss.NewStyle().Width(maxLineWidth).Render(renderedLine))
-		}
-		return style.Render(lipgloss.JoinVertical(lipgloss.Top, renderedLogLines...))
+		return style.Render(m.logViewport.View())
 	}
 }
 
 func (d Dashboard) View() string {
-	renderedSidebar := d.sidebar.View(d.width*1/5, d.height, d.selectedPane == SidebarPane)
-	renderedMain := d.main.View(d.width*4/5, d.height, d.selectedPane == MainPane)
+	renderedSidebar := d.sidebar.View(d.selectedPane == SidebarPane)
+	renderedMain := d.main.View(d.selectedPane == MainPane)
 
 	return lipgloss.JoinHorizontal(lipgloss.Left, renderedSidebar, renderedMain)
 }

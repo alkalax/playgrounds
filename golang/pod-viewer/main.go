@@ -43,6 +43,7 @@ type Main struct {
 	index       int
 	logViewport viewport.Model
 	logLines    []string
+	logOffset   int
 	podView     bool
 }
 
@@ -105,6 +106,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.dashboard.main.index--
 				}
 			}
+		case "h", "left":
+			if m.dashboard.selectedPane == MainPane && !m.dashboard.main.podView && m.dashboard.main.logOffset > 0 {
+				m.dashboard.main.logOffset = m.dashboard.main.logOffset - 3
+				m.dashboard.main.logViewport.SetXOffset(m.dashboard.main.logOffset)
+			}
+		case "l", "right":
+			if m.dashboard.selectedPane == MainPane && !m.dashboard.main.podView {
+				m.dashboard.main.logOffset = m.dashboard.main.logOffset + 3
+				m.dashboard.main.logViewport.SetXOffset(m.dashboard.main.logOffset)
+			}
 		case " ":
 			if m.dashboard.selectedPane == SidebarPane {
 				m.dashboard.selectedPane = MainPane
@@ -125,6 +136,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else {
 					m.dashboard.main.podView = true
 					m.dashboard.main.logLines = []string{}
+					m.dashboard.main.logOffset = 0
 				}
 			}
 		}

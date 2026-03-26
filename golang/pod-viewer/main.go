@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -44,7 +46,26 @@ type Main struct {
 	logViewport viewport.Model
 	logLines    []string
 	logOffset   int
+	logStream   chan LogMsg
 	podView     bool
+}
+
+type LogMsg string
+
+func mockStream(ch chan<- LogMsg) tea.Cmd {
+	return func() tea.Msg {
+		for {
+			waited := rand.Intn(5)
+			time.Sleep(time.Second * time.Duration(waited))
+			ch <- LogMsg(fmt.Sprintf("waited %d seconds", waited))
+		}
+	}
+}
+
+func waitLogMsg(ch <-chan LogMsg) tea.Cmd {
+	return func() tea.Msg {
+		return <-ch
+	}
 }
 
 func initialModel() model {
@@ -78,6 +99,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.dashboard.sidebar.height = msg.Height
 		m.dashboard.main.width = msg.Width * 4 / 5
 		m.dashboard.main.height = msg.Height
+	case LogMsg:
+		m.dashboard.main.logLines = append(m.dashboard.main.logLines, string(msg))
+		m.dashboard.main.logViewport.SetContent(strings.Join(m.dashboard.main.logLines, "\n"))
+		m.dashboard.main.logViewport.GotoBottom()
+
+		return m, waitLogMsg(m.dashboard.main.logStream)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -121,13 +148,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.dashboard.selectedPane = MainPane
 				m.dashboard.main.index = 0
 			} else if m.dashboard.main.podView {
-				namespace := m.dashboard.sidebar.namespaces[m.dashboard.sidebar.index]
-				pod := m.dashboard.main.pods[m.dashboard.main.index]
-				m.dashboard.main.logLines = getLogs(namespace, pod)
+				//namespace := m.dashboard.sidebar.namespaces[m.dashboard.sidebar.index]
+				//pod := m.dashboard.main.pods[m.dashboard.main.index]
+				//m.dashboard.main.logLines = getLogs(namespace, pod)
+				m.dashboard.main.logStream = make(chan LogMsg)
 				m.dashboard.main.logViewport = viewport.New(m.dashboard.main.width-2, m.dashboard.height-2)
 				m.dashboard.main.logViewport.SetContent(strings.Join(m.dashboard.main.logLines, "\n"))
 				m.dashboard.main.logViewport.GotoBottom()
 				m.dashboard.main.podView = false
+
+				return m, tea.Batch(mockStream(m.dashboard.main.logStream), waitLogMsg(m.dashboard.main.logStream))
 			}
 		case "q":
 			if m.dashboard.selectedPane == MainPane {

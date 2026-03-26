@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 var server = "http://127.0.0.1:8001"
@@ -111,4 +115,37 @@ func getLogs(namespace, pod string) []string {
 	}
 
 	return strings.Split(string(body), "\n")
+}
+
+func startLogStream(ctx context.Context, namespace, pod string, ch chan<- LogMsg, streamID int) tea.Cmd {
+	return func() tea.Msg {
+		url := fmt.Sprintf("%s/api/v1/namespaces/%s/pods/%s/log?follow=true", server, namespace, pod)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			panic(err)
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil
+		}
+		defer resp.Body.Close()
+
+		reader := bufio.NewReader(resp.Body)
+		for {
+			select {
+			case <-ctx.Done():
+				return nil
+			default:
+				line, err := reader.ReadString('\n')
+				if err != nil {
+					if err == io.EOF || ctx.Err() != nil {
+						return nil
+					}
+					panic(err)
+				}
+				ch <- LogMsg{Line: strings.TrimRight(line, "\n"), StreamID: streamID}
+			}
+		}
+	}
 }

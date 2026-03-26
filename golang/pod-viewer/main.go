@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -44,7 +47,31 @@ type Main struct {
 	logViewport viewport.Model
 	logLines    []string
 	logOffset   int
+	logStream   chan LogMsg
+	logCancel   context.CancelFunc
+	logStreamID int
 	podView     bool
+}
+
+type LogMsg struct {
+	Line     string
+	StreamID int
+}
+
+func mockStream(ch chan<- LogMsg, streamID int) tea.Cmd {
+	return func() tea.Msg {
+		for {
+			waited := rand.Intn(5)
+			time.Sleep(time.Second * time.Duration(waited))
+			ch <- LogMsg{Line: fmt.Sprintf("waited %d seconds", waited), StreamID: streamID}
+		}
+	}
+}
+
+func waitLogMsg(ch <-chan LogMsg) tea.Cmd {
+	return func() tea.Msg {
+		return <-ch
+	}
 }
 
 func initialModel() model {
@@ -78,6 +105,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.dashboard.sidebar.height = msg.Height
 		m.dashboard.main.width = msg.Width * 4 / 5
 		m.dashboard.main.height = msg.Height
+	case LogMsg:
+		if msg.StreamID != m.dashboard.main.logStreamID {
+			return m, nil
+		}
+
+		m.dashboard.main.logLines = append(m.dashboard.main.logLines, msg.Line)
+		m.dashboard.main.logViewport.SetContent(strings.Join(m.dashboard.main.logLines, "\n"))
+		m.dashboard.main.logViewport.GotoBottom()
+
+		return m, waitLogMsg(m.dashboard.main.logStream)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -121,13 +158,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.dashboard.selectedPane = MainPane
 				m.dashboard.main.index = 0
 			} else if m.dashboard.main.podView {
+				if m.dashboard.main.logCancel != nil {
+					m.dashboard.main.logCancel()
+					m.dashboard.main.logCancel = nil
+				}
+
+				m.dashboard.main.logStreamID++
+				streamID := m.dashboard.main.logStreamID
+				m.dashboard.main.logStream = make(chan LogMsg, 32)
+
 				namespace := m.dashboard.sidebar.namespaces[m.dashboard.sidebar.index]
 				pod := m.dashboard.main.pods[m.dashboard.main.index]
-				m.dashboard.main.logLines = getLogs(namespace, pod)
+				//m.dashboard.main.logLines = getLogs(namespace, pod)
 				m.dashboard.main.logViewport = viewport.New(m.dashboard.main.width-2, m.dashboard.height-2)
 				m.dashboard.main.logViewport.SetContent(strings.Join(m.dashboard.main.logLines, "\n"))
 				m.dashboard.main.logViewport.GotoBottom()
 				m.dashboard.main.podView = false
+
+				ctx, cancel := context.WithCancel(context.Background())
+				m.dashboard.main.logCancel = cancel
+
+				return m, tea.Batch(startLogStream(ctx, namespace, pod, m.dashboard.main.logStream, streamID), waitLogMsg(m.dashboard.main.logStream))
 			}
 		case "q":
 			if m.dashboard.selectedPane == MainPane {
@@ -137,6 +188,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.dashboard.main.podView = true
 					m.dashboard.main.logLines = []string{}
 					m.dashboard.main.logOffset = 0
+					if m.dashboard.main.logCancel != nil {
+						m.dashboard.main.logCancel()
+						m.dashboard.main.logCancel = nil
+					}
 				}
 			}
 		}

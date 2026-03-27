@@ -33,7 +33,7 @@ type Repo struct {
 }
 
 func (c *Client) searchRepos(query string) ([]Repo, error) {
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/search/repositories?q=%s", c.baseUrl, query), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/search/repositories?q=%s&per_page=10", c.baseUrl, query), nil)
 	if err != nil {
 		return nil, err
 	}

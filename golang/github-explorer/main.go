@@ -32,8 +32,8 @@ type Repo struct {
 	Languages    []string
 }
 
-func (c *Client) searchRepos(query string) ([]Repo, error) {
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/search/repositories?q=%s&per_page=10", c.baseUrl, query), nil)
+func (c *Client) get(path string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,11 @@ func (c *Client) searchRepos(query string) ([]Repo, error) {
 	req.Header.Set("User-Agent", "github-explorer")
 	req.Header.Set("Authorization", "token "+c.token)
 
-	resp, err := c.http.Do(req)
+	return c.http.Do(req)
+}
+
+func (c *Client) searchRepos(query string) ([]Repo, error) {
+	resp, err := c.get(fmt.Sprintf("%s/search/repositories?q=%s&per_page=10", c.baseUrl, query))
 	if err != nil {
 		return nil, err
 	}
@@ -68,15 +72,7 @@ func (c *Client) searchRepos(query string) ([]Repo, error) {
 }
 
 func (c *Client) listRepos(user string) ([]Repo, error) {
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/users/%s/repos", c.baseUrl, user), nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("User-Agent", "github-explorer")
-	req.Header.Set("Authorization", "token "+c.token)
-
-	resp, err := c.http.Do(req)
+	resp, err := c.get(fmt.Sprintf("%s/users/%s/repos", c.baseUrl, user))
 	if err != nil {
 		return nil, err
 	}
@@ -98,15 +94,7 @@ func (c *Client) listRepos(user string) ([]Repo, error) {
 	}
 
 	for i := range repos {
-		langReq, err := http.NewRequest(http.MethodGet, repos[i].LanguagesUrl, nil)
-		if err != nil {
-			return nil, err
-		}
-		langReq.Header.Set("Accept", "application/vnd.github+json")
-		langReq.Header.Set("User-Agent", "github-explorer")
-		langReq.Header.Set("Authorization", "token "+c.token)
-
-		langResp, err := c.http.Do(langReq)
+		langResp, err := c.get(repos[i].LanguagesUrl)
 		if err != nil {
 			return nil, err
 		}

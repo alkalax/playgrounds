@@ -14,5 +14,14 @@ func main() {
 	}
 	defer db.Close()
 
-	fmt.Println("DB opened")
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS Users (
+		Id INTEGER PRIMARY KEY,
+		Name TEXT,
+		Age INTEGER
+	)
+	`)
+	if err != nil {
+		panic(err)
+	}
 }

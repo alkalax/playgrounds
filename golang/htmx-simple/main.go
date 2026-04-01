@@ -12,7 +12,11 @@ type PageData struct {
 }
 
 func main() {
-	tpl := template.Must(template.ParseGlob("templates/*.html"))
+	tpl := template.Must(template.ParseFiles(
+		"templates/base.html",
+		"templates/content.html",
+		"templates/partials/message.html",
+	))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{

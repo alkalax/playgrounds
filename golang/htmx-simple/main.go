@@ -12,7 +12,7 @@ type PageData struct {
 }
 
 func main() {
-	tpl := template.Must(template.ParseFiles("index.html"))
+	tpl := template.Must(template.ParseGlob("templates/*.html"))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
@@ -21,7 +21,7 @@ func main() {
 			Message: "This is paragraph text.",
 		}
 
-		tpl.Execute(w, data)
+		tpl.ExecuteTemplate(w, "base", data)
 	})
 
 	http.ListenAndServe(":8080", nil)

@@ -31,5 +31,13 @@ func main() {
 		tpl.ExecuteTemplate(w, "base", data)
 	})
 
+	http.HandleFunc("/items", func(w http.ResponseWriter, r *http.Request) {
+		data := PageData{
+			Items: []string{"raspberries", "blueberries", "pears"},
+		}
+
+		tpl.ExecuteTemplate(w, "items", data)
+	})
+
 	http.ListenAndServe(":8080", nil)
 }

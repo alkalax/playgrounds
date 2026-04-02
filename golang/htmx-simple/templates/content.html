@@ -1,4 +1,11 @@
 {{define "content"}}
 {{template "message" .Message}}
-{{template "items" .Items}}
+<button 
+  hx-post="/items" 
+  hx-target="#items"
+  hx-swap="innerHTML">
+  Load items
+</button>
+
+<div id="items"></div>
 {{end}}

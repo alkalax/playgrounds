@@ -39,5 +39,19 @@ func main() {
 		tpl.ExecuteTemplate(w, "items", data)
 	})
 
+	http.HandleFunc("/add-item", func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		newItem := r.FormValue("item")
+
+		items := []string{"raspberries", "blueberries", "pears"}
+		if newItem != "" {
+			items = append(items, newItem)
+		}
+
+		data := PageData{Items: items}
+
+		tpl.ExecuteTemplate(w, "items", data)
+	})
+
 	http.ListenAndServe(":8080", nil)
 }

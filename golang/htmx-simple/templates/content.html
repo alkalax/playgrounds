@@ -1,3 +1,22 @@
 {{define "content"}}
 {{template "message" .Message}}
+<button 
+  hx-post="/items" 
+  hx-target="#items"
+  hx-swap="innerHTML">
+  Load items
+</button>
+
+<hr />
+
+<form
+  hx-post="/add-item" 
+  hx-target="#items"
+  hx-swap="innerHTML">
+
+  <input type="text" name="item" placeholder="banana"/>
+  <button type="submit">Add</button>
+</form>
+
+<div id="items"></div>
 {{end}}

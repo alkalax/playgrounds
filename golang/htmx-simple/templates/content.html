@@ -15,7 +15,7 @@
   class="flex gap-2 mb-4"
   hx-post="/add-item" 
   hx-target="#items"
-  hx-swap="innerHTML">
+  hx-swap="innerHTML transition:true">
 
   <input class="border rounded px-2 py-1 flex-1" type="text" name="item" placeholder="banana"/>
   <button class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" type="submit">Add</button>

@@ -9,6 +9,7 @@ type PageData struct {
 	Title   string
 	Heading string
 	Message string
+	Items   []string
 }
 
 func main() {
@@ -16,6 +17,7 @@ func main() {
 		"templates/base.html",
 		"templates/content.html",
 		"templates/partials/message.html",
+		"templates/partials/items.html",
 	))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -23,6 +25,7 @@ func main() {
 			Title:   "Alkalax | Home",
 			Heading: "Page heading",
 			Message: "This is paragraph text.",
+			Items:   []string{"apples", "oranges", "pears", "watermelons"},
 		}
 
 		tpl.ExecuteTemplate(w, "base", data)

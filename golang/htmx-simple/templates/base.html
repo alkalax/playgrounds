@@ -3,11 +3,30 @@
 <html>
   <head>
     <title>{{.Title}}</title>
-      <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fade-in 0.3s ease-out;
+    }
+    </style>
   </head>
-  <body>
-    <h1>{{.Heading}}</h1>
+  <body class="bg-gray-100 p-10">
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow">
+    <h1 class="text-xl font-bold mb-4">{{.Heading}}</h1>
     {{template "content" .}}
+    </div>
   </body>
 </html>
 {{end}}

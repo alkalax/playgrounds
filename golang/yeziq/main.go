@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -15,6 +16,7 @@ type Model struct {
 	tokenField TokenField
 	width      int
 	height     int
+	index      int
 }
 
 type TokenField struct {
@@ -61,43 +63,90 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "l", "right":
+			if m.index < len(m.tokenField.tokens) {
+				m.index++
+			}
 		}
 	}
 
 	return m, nil
 }
 
-func (tf *TokenField) renderTokens() string {
-	var sb strings.Builder
+func (tf *TokenField) renderTokens(focusedToken int) string {
+	var netLineLength int = tf.width - 2*tf.padding
+	var sbTokenField strings.Builder
+
+	line := 0
+	index := 0
+	var sbLine strings.Builder
 	for i, token := range tf.tokens {
-		sb.WriteString(token.word)
-		if i < len(tf.tokens) {
-			sb.WriteRune(' ')
+		log.Println("========================================")
+		log.Println("Word:", token.word)
+		lineWithWord := sbLine.String() + token.word
+		if index > 0 {
+			// Accounting for a space if not first word in line
+			lineWithWord += " "
 		}
+		log.Printf("Index %d, lineww: %s\n", index, lineWithWord)
+
+		if len(lineWithWord) > netLineLength {
+			log.Printf("%d > %d, resetting line buffer\n", len(lineWithWord), netLineLength)
+			sbTokenField.WriteString(sbLine.String())
+			sbTokenField.WriteRune('\n')
+			sbLine.Reset()
+			line++
+			index = 0
+		}
+
+		tf.tokens[i].start = index
+		if index > 0 {
+			tf.tokens[i].start++
+			sbLine.WriteRune(' ')
+		}
+		tf.tokens[i].end = tf.tokens[i].start + len(token.word)
+		tf.tokens[i].line = line
+		log.Println(tf.tokens[i])
+
+		renderedWord := token.word
+		if focusedToken == i {
+			renderedWord = lipgloss.NewStyle().Background(lipgloss.Color("1")).Render(renderedWord)
+		}
+		sbLine.WriteString(renderedWord)
+		index = tf.tokens[i].end
+		log.Println("========================================")
 	}
 
-	return sb.String()
+	if sbLine.Len() > 0 {
+		sbTokenField.WriteString(sbLine.String())
+	}
+
+	return sbTokenField.String()
 }
 
-func (tf *TokenField) View(width, height int) string {
-	tokenFieldWidth := width - 2*tf.padding - 2
-	tokenFieldHeight := height - 2*tf.padding - 2
-
-	renderedTokens := tf.renderTokens()
+func (tf *TokenField) View(width, height, focusedToken int) string {
+	tf.width = width - 2
+	tf.height = height - 2
 
 	return lipgloss.NewStyle().
-		Width(tokenFieldWidth).
-		Height(tokenFieldHeight).
+		Width(tf.width).
+		Height(tf.height).
 		Padding(tf.padding, tf.padding).
 		Border(lipgloss.NormalBorder()).
-		Render(renderedTokens)
+		Render(tf.renderTokens(focusedToken))
 }
 
 func (m *Model) View() string {
-	return m.tokenField.View(m.width/2, m.height)
+	return m.tokenField.View(m.width/2, m.height, m.index)
 }
 
 func main() {
+	f, err := tea.LogToFile("debug.log", "debug")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
 	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Println(err)

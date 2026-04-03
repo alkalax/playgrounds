@@ -46,12 +46,17 @@ func NewWorld() *World {
 
 func (w *World) Display(time time.Time) {
 	fmt.Print("\033[H\033[2J") // clear terminal
-	timeStr := time.Format("02.01.2006 15:04:05")
+	timeStr := time.Format("Mon 02 Jan 2006 - 15:03:05")
 	fmt.Println(timeStr)
-	fmt.Println(strings.Repeat("=", len(timeStr)))
 
+	tableFormatStr := "%-15s %-15s %-10s\n"
+	tableHeading := fmt.Sprintf(tableFormatStr, "NAME", "JOB", "STATUS")
+
+	fmt.Println(strings.Repeat("=", len(tableHeading)))
+	fmt.Print(tableHeading)
+	fmt.Println(strings.Repeat("=", len(tableHeading)))
 	for _, citizen := range w.citizens {
-		fmt.Printf("%s %s: %s\n", citizen.Job, citizen.Name, citizen.Status)
+		fmt.Printf(tableFormatStr, citizen.Name, citizen.Job, citizen.Status)
 	}
 }
 

@@ -46,7 +46,7 @@ func NewWorld() *World {
 
 func (w *World) Display(time time.Time) {
 	fmt.Print("\033[H\033[2J") // clear terminal
-	timeStr := time.String()
+	timeStr := time.Format("02.01.2006 15:04:05")
 	fmt.Println(timeStr)
 	fmt.Println(strings.Repeat("=", len(timeStr)))
 

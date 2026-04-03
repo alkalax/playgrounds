@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var sample string = "This is a sample string. This is also a different sentence altogether."
+var sample string = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 
 type Model struct {
 	tokenField TokenField
@@ -67,10 +67,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (tf *TokenField) View(width, height int) string {
-	tokenFieldWidth := width - 2*tf.padding - 2
-	tokenFieldHeight := height - 2*tf.padding - 2
-
+func (tf *TokenField) renderTokens() string {
 	var sb strings.Builder
 	for i, token := range tf.tokens {
 		sb.WriteString(token.word)
@@ -79,16 +76,25 @@ func (tf *TokenField) View(width, height int) string {
 		}
 	}
 
+	return sb.String()
+}
+
+func (tf *TokenField) View(width, height int) string {
+	tokenFieldWidth := width - 2*tf.padding - 2
+	tokenFieldHeight := height - 2*tf.padding - 2
+
+	renderedTokens := tf.renderTokens()
+
 	return lipgloss.NewStyle().
 		Width(tokenFieldWidth).
 		Height(tokenFieldHeight).
 		Padding(tf.padding, tf.padding).
 		Border(lipgloss.NormalBorder()).
-		Render(sb.String())
+		Render(renderedTokens)
 }
 
 func (m *Model) View() string {
-	return m.tokenField.View(m.width, m.height)
+	return m.tokenField.View(m.width/2, m.height)
 }
 
 func main() {

@@ -16,6 +16,7 @@ type Model struct {
 	tokenField TokenField
 	width      int
 	height     int
+	index      int
 }
 
 type TokenField struct {
@@ -62,13 +63,17 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "l", "right":
+			if m.index < len(m.tokenField.tokens) {
+				m.index++
+			}
 		}
 	}
 
 	return m, nil
 }
 
-func (tf *TokenField) renderTokens() string {
+func (tf *TokenField) renderTokens(focusedToken int) string {
 	var netLineLength int = tf.width - 2*tf.padding
 	var sbTokenField strings.Builder
 
@@ -103,7 +108,11 @@ func (tf *TokenField) renderTokens() string {
 		tf.tokens[i].line = line
 		log.Println(tf.tokens[i])
 
-		sbLine.WriteString(token.word)
+		renderedWord := token.word
+		if focusedToken == i {
+			renderedWord = lipgloss.NewStyle().Background(lipgloss.Color("1")).Render(renderedWord)
+		}
+		sbLine.WriteString(renderedWord)
 		index = tf.tokens[i].end
 		log.Println("========================================")
 	}
@@ -115,7 +124,7 @@ func (tf *TokenField) renderTokens() string {
 	return sbTokenField.String()
 }
 
-func (tf *TokenField) View(width, height int) string {
+func (tf *TokenField) View(width, height, focusedToken int) string {
 	tf.width = width - 2
 	tf.height = height - 2
 
@@ -124,11 +133,11 @@ func (tf *TokenField) View(width, height int) string {
 		Height(tf.height).
 		Padding(tf.padding, tf.padding).
 		Border(lipgloss.NormalBorder()).
-		Render(tf.renderTokens())
+		Render(tf.renderTokens(focusedToken))
 }
 
 func (m *Model) View() string {
-	return m.tokenField.View(m.width/2, m.height)
+	return m.tokenField.View(m.width/2, m.height, m.index)
 }
 
 func main() {

@@ -64,7 +64,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "l", "right":
-			if m.index < len(m.tokenField.tokens) {
+			if m.index < len(m.tokenField.tokens)-1 {
 				m.index++
 			}
 		}

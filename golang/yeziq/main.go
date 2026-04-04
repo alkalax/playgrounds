@@ -263,7 +263,10 @@ func (tf *TokenField) View(width, height, focusedToken int) string {
 }
 
 func (m *Model) View() string {
-	return m.tokenField.View(m.width/2, m.height, m.index)
+	return lipgloss.Place(
+		m.width, m.height, lipgloss.Center, lipgloss.Bottom,
+		m.tokenField.View(m.width/2, m.height*7/8, m.index),
+	)
 }
 
 func main() {

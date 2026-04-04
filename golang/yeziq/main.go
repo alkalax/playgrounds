@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"regexp"
 	"strings"
@@ -137,7 +138,7 @@ func (tf *TokenField) switchFocusVertically(currentIndex int, up bool) int {
 
 	candidate := 0
 	for i, token := range tf.tokens {
-		if token.line == newLine {
+		if token.line == newLine && !token.delim {
 			candidate = i
 			break
 		}
@@ -155,10 +156,26 @@ func (tf *TokenField) switchFocusVertically(currentIndex int, up bool) int {
 
 		candidateToken := tf.tokens[candidate]
 		if candidateToken.line == focusedToken.line {
-			return candidate - 1
+			prev := candidate - 1
+			for tf.tokens[prev].delim {
+				prev--
+			}
+			return prev
 		}
 
 		if candidateToken.end >= anchorIndex {
+			lineDiff := int(math.Abs(float64(focusedToken.line) - float64(tf.tokens[candidate].line)))
+			if lineDiff != 1 {
+				// Edge case when going through empty space at the end of the line
+				for {
+					lineDiff = int(math.Abs(float64(focusedToken.line) - float64(tf.tokens[candidate].line)))
+					if lineDiff == 1 && !tf.tokens[candidate].delim {
+						break
+					}
+					candidate--
+				}
+			}
+
 			return candidate
 		}
 

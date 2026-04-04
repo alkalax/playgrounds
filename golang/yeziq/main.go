@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -11,6 +12,8 @@ import (
 )
 
 var sample string = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+
+var sample2 string = "asdfsadf sadfsadf. asdfsadf. asdfsadfsdf? asdfsadf sadfsadf. asdfsadf. asdfsadfsdf?asdfsadf sadfsadf. asdfsadf. asdfsadfsdf? asdfsadf sadfsadf. asdfsadf. asdfsadfsdf?asdfsadf sadfsadf. asdfsadf. asdfsadfsdf?"
 
 type Styles struct {
 	focusedToken lipgloss.Style
@@ -32,7 +35,7 @@ type TokenField struct {
 }
 
 type Token struct {
-	sep   bool
+	delim bool
 	word  string
 	start int
 	end   int
@@ -47,9 +50,22 @@ func defaultStyles() Styles {
 }
 
 func tokenize(text string) []Token {
+	re := regexp.MustCompile(`[,.?!]?\s+`)
+	words := re.Split(text, -1)
+	delims := re.FindAllString(text, -1)
+
 	tokens := []Token{}
-	for word := range strings.SplitSeq(text, " ") {
-		tokens = append(tokens, Token{word: word})
+	for i, word := range words {
+		if i < len(words)-1 {
+			tokens = append(tokens, Token{word: word})
+		} else if strings.ContainsRune(",.?!", rune(word[len(word)-1])) {
+			// Edge case for delimiter at the end of text
+			tokens = append(tokens, Token{word: word[0 : len(word)-1]})
+			tokens = append(tokens, Token{word: word[len(word)-1:], delim: true})
+		}
+		if i < len(delims) {
+			tokens = append(tokens, Token{word: delims[i], delim: true})
+		}
 	}
 
 	return tokens
@@ -78,12 +94,12 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "l", "right":
-			if m.index < len(m.tokenField.tokens)-1 {
-				m.index++
+			if m.index < len(m.tokenField.tokens)-2 {
+				m.index += 2
 			}
 		case "h", "left":
-			if m.index > 0 {
-				m.index--
+			if m.index > 1 {
+				m.index -= 2
 			}
 		case "j", "down":
 			m.index = m.tokenField.switchFocusVertically(m.index, false)
@@ -127,7 +143,12 @@ func (tf *TokenField) switchFocusVertically(currentIndex int, up bool) int {
 
 	for {
 		if candidate >= len(tf.tokens) {
-			return len(tf.tokens) - 1
+			last := len(tf.tokens) - 1
+			if tf.tokens[last].delim {
+				return last - 1
+			} else {
+				return last
+			}
 		}
 
 		candidateToken := tf.tokens[candidate]
@@ -152,14 +173,16 @@ func (tf *TokenField) renderTokens(focusedToken int) string {
 	renderedIndex := 0
 	var sbLinePlain strings.Builder // Tracks plain text for layout decisions
 	var sbLine strings.Builder      // Tracks actual rendered output
-	for i, token := range tf.tokens {
+	//for i, token := range tf.tokens {
+	for i := 0; i < len(tf.tokens); i += 2 {
 		log.Println("========================================")
-		log.Println("Word:", token.word)
-		lineWithWord := sbLinePlain.String() + token.word
-		if index > 0 {
-			// Accounting for a space if not first word in line
-			lineWithWord += " "
+		log.Println("Word:", tf.tokens[i].word)
+
+		lineWithWord := sbLinePlain.String() + tf.tokens[i].word
+		if i+1 < len(tf.tokens) {
+			lineWithWord += tf.tokens[i+1].word
 		}
+
 		log.Printf("Index %d, lineww: %s\n", index, lineWithWord)
 
 		if len(lineWithWord) > netLineLength {
@@ -173,25 +196,32 @@ func (tf *TokenField) renderTokens(focusedToken int) string {
 		}
 
 		tf.tokens[i].start = index
-		if index > 0 {
-			tf.tokens[i].start++
-			sbLine.WriteRune(' ')
-			sbLinePlain.WriteRune(' ')
-		}
-		tf.tokens[i].end = tf.tokens[i].start + len(token.word)
+		tf.tokens[i].end = tf.tokens[i].start + len(tf.tokens[i].word)
 		tf.tokens[i].line = line
+		if i+1 < len(tf.tokens) {
+			tf.tokens[i+1].line = line
+		}
 		tf.tokens[i].index = renderedIndex
 		log.Println(tf.tokens[i])
 
-		renderedWord := token.word
+		renderedWord := tf.tokens[i].word
 		if focusedToken == i {
 			renderedWord = defaultStyles().focusedToken.Render(renderedWord)
 		}
 
 		sbLine.WriteString(renderedWord)
-		sbLinePlain.WriteString(token.word)
+		sbLinePlain.WriteString(tf.tokens[i].word)
+		if i+1 < len(tf.tokens) {
+			sbLine.WriteString(tf.tokens[i+1].word)
+			sbLinePlain.WriteString(tf.tokens[i+1].word)
+		}
+
 		index = tf.tokens[i].end
-		renderedIndex++
+		if i+1 < len(tf.tokens) {
+			tf.tokens[i].end += len(tf.tokens[i+1].word) - 1
+			index += len(tf.tokens[i+1].word)
+		}
+		renderedIndex += 2
 		log.Println("========================================")
 	}
 

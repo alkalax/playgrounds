@@ -12,6 +12,10 @@ import (
 
 var sample string = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 
+type Styles struct {
+	focusedToken lipgloss.Style
+}
+
 type Model struct {
 	tokenField TokenField
 	width      int
@@ -34,6 +38,12 @@ type Token struct {
 	end   int
 	line  int
 	index int
+}
+
+func defaultStyles() Styles {
+	return Styles{
+		focusedToken: lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10")),
+	}
 }
 
 func initialModel() *Model {
@@ -173,7 +183,7 @@ func (tf *TokenField) renderTokens(focusedToken int) string {
 
 		renderedWord := token.word
 		if focusedToken == i {
-			renderedWord = lipgloss.NewStyle().Background(lipgloss.Color("1")).Render(renderedWord)
+			renderedWord = defaultStyles().focusedToken.Render(renderedWord)
 		}
 
 		sbLine.WriteString(renderedWord)

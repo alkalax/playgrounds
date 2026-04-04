@@ -67,6 +67,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.index < len(m.tokenField.tokens)-1 {
 				m.index++
 			}
+		case "h", "left":
+			if m.index > 0 {
+				m.index--
+			}
 		}
 	}
 

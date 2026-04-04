@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"regexp"
 	"strings"
@@ -19,7 +20,15 @@ type Styles struct {
 	focusedToken lipgloss.Style
 }
 
+type ViewState int
+
+const (
+	TextView ViewState = iota
+	ModalView
+)
+
 type Model struct {
+	viewState  ViewState
 	tokenField TokenField
 	width      int
 	height     int
@@ -77,6 +86,7 @@ func initialModel() *Model {
 			tokens:            tokenize(sample),
 			horizontalPadding: 1,
 		},
+		viewState: TextView,
 	}
 }
 
@@ -90,21 +100,33 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
-		case "l", "right":
-			if m.index < len(m.tokenField.tokens)-2 {
-				m.index += 2
+		switch m.viewState {
+		case TextView:
+			switch msg.String() {
+			case "ctrl+c", "q":
+				return m, tea.Quit
+			case "l", "right":
+				if m.index < len(m.tokenField.tokens)-2 {
+					m.index += 2
+				}
+			case "h", "left":
+				if m.index > 1 {
+					m.index -= 2
+				}
+			case "j", "down":
+				m.index = m.tokenField.switchFocusVertically(m.index, false)
+			case "k", "up":
+				m.index = m.tokenField.switchFocusVertically(m.index, true)
+			case " ":
+				m.viewState = ModalView
 			}
-		case "h", "left":
-			if m.index > 1 {
-				m.index -= 2
+		case ModalView:
+			switch msg.String() {
+			case "ctrl+c", "q":
+				return m, tea.Quit
+			case " ":
+				m.viewState = TextView
 			}
-		case "j", "down":
-			m.index = m.tokenField.switchFocusVertically(m.index, false)
-		case "k", "up":
-			m.index = m.tokenField.switchFocusVertically(m.index, true)
 		}
 	}
 
@@ -137,7 +159,7 @@ func (tf *TokenField) switchFocusVertically(currentIndex int, up bool) int {
 
 	candidate := 0
 	for i, token := range tf.tokens {
-		if token.line == newLine {
+		if token.line == newLine && !token.delim {
 			candidate = i
 			break
 		}
@@ -155,10 +177,26 @@ func (tf *TokenField) switchFocusVertically(currentIndex int, up bool) int {
 
 		candidateToken := tf.tokens[candidate]
 		if candidateToken.line == focusedToken.line {
-			return candidate - 1
+			prev := candidate - 1
+			for tf.tokens[prev].delim {
+				prev--
+			}
+			return prev
 		}
 
 		if candidateToken.end >= anchorIndex {
+			lineDiff := int(math.Abs(float64(focusedToken.line) - float64(tf.tokens[candidate].line)))
+			if lineDiff != 1 {
+				// Edge case when going through empty space at the end of the line
+				for {
+					lineDiff = int(math.Abs(float64(focusedToken.line) - float64(tf.tokens[candidate].line)))
+					if lineDiff == 1 && !tf.tokens[candidate].delim {
+						break
+					}
+					candidate--
+				}
+			}
+
 			return candidate
 		}
 
@@ -246,7 +284,21 @@ func (tf *TokenField) View(width, height, focusedToken int) string {
 }
 
 func (m *Model) View() string {
-	return m.tokenField.View(m.width/2, m.height, m.index)
+	switch m.viewState {
+	case TextView:
+		return lipgloss.Place(
+			m.width, m.height, lipgloss.Center, lipgloss.Bottom,
+			m.tokenField.View(m.width/2, m.height*7/8, m.index),
+		)
+	case ModalView:
+		return lipgloss.Place(
+			m.width, m.height, lipgloss.Center, lipgloss.Center,
+			lipgloss.NewStyle().Width(m.width/3).Height(m.height/3).Border(lipgloss.NormalBorder()).
+				Render(m.tokenField.tokens[m.index].word),
+		)
+	default:
+		return ""
+	}
 }
 
 func main() {

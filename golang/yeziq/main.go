@@ -133,6 +133,8 @@ func (tf *TokenField) switchFocusVertically(currentIndex int, up bool) int {
 		newLine++
 	}
 
+	anchorIndex := (focusedToken.start + focusedToken.end) / 2
+
 	candidate := 0
 	for i, token := range tf.tokens {
 		if token.line == newLine {
@@ -156,7 +158,7 @@ func (tf *TokenField) switchFocusVertically(currentIndex int, up bool) int {
 			return candidate - 1
 		}
 
-		if candidateToken.end >= focusedToken.start {
+		if candidateToken.end >= anchorIndex {
 			return candidate
 		}
 
@@ -173,7 +175,6 @@ func (tf *TokenField) renderTokens(focusedToken int) string {
 	renderedIndex := 0
 	var sbLinePlain strings.Builder // Tracks plain text for layout decisions
 	var sbLine strings.Builder      // Tracks actual rendered output
-	//for i, token := range tf.tokens {
 	for i := 0; i < len(tf.tokens); i += 2 {
 		log.Println("========================================")
 		log.Println("Word:", tf.tokens[i].word)

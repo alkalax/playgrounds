@@ -20,10 +20,11 @@ type Model struct {
 }
 
 type TokenField struct {
-	tokens  []Token
-	width   int
-	height  int
-	padding int
+	tokens            []Token
+	width             int
+	height            int
+	horizontalPadding int
+	verticalPadding   int
 }
 
 type Token struct {
@@ -45,8 +46,8 @@ func initialModel() *Model {
 	}
 	return &Model{
 		tokenField: TokenField{
-			tokens:  tokens,
-			padding: 1,
+			tokens:            tokens,
+			horizontalPadding: 1,
 		},
 	}
 }
@@ -131,7 +132,7 @@ func (tf *TokenField) switchFocusVertically(currentIndex int, up bool) int {
 }
 
 func (tf *TokenField) renderTokens(focusedToken int) string {
-	var netLineLength int = tf.width - 2*tf.padding
+	var netLineLength int = tf.width - 2*tf.horizontalPadding
 	var sbTokenField strings.Builder
 
 	line := 0
@@ -196,7 +197,7 @@ func (tf *TokenField) View(width, height, focusedToken int) string {
 	return lipgloss.NewStyle().
 		Width(tf.width).
 		Height(tf.height).
-		Padding(tf.padding, tf.padding).
+		Padding(tf.verticalPadding, tf.horizontalPadding).
 		Border(lipgloss.NormalBorder()).
 		Render(tf.renderTokens(focusedToken))
 }

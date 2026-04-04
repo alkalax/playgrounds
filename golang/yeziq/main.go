@@ -32,6 +32,7 @@ type Token struct {
 	start int
 	end   int
 	line  int
+	index int
 }
 
 func initialModel() *Model {
@@ -71,10 +72,62 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.index > 0 {
 				m.index--
 			}
+		case "j", "down":
+			m.index = m.tokenField.switchFocusVertically(m.index, false)
+		case "k", "up":
+			m.index = m.tokenField.switchFocusVertically(m.index, true)
 		}
 	}
 
 	return m, nil
+}
+
+func (tf *TokenField) switchFocusVertically(currentIndex int, up bool) int {
+	currToken := 0
+	for i, token := range tf.tokens {
+		if token.index == currentIndex {
+			currToken = i
+			break
+		}
+	}
+
+	focusedToken := tf.tokens[currToken]
+	lastLine := tf.tokens[len(tf.tokens)-1].line
+	if (up && focusedToken.line == 0) || (!up && focusedToken.line == lastLine) {
+		return currentIndex
+	}
+
+	newLine := focusedToken.line
+	if up {
+		newLine--
+	} else {
+		newLine++
+	}
+
+	candidate := 0
+	for i, token := range tf.tokens {
+		if token.line == newLine {
+			candidate = i
+			break
+		}
+	}
+
+	for {
+		if candidate >= len(tf.tokens) {
+			return len(tf.tokens) - 1
+		}
+
+		candidateToken := tf.tokens[candidate]
+		if candidateToken.line == focusedToken.line {
+			return candidate - 1
+		}
+
+		if candidateToken.end >= focusedToken.start {
+			return candidate
+		}
+
+		candidate++
+	}
 }
 
 func (tf *TokenField) renderTokens(focusedToken int) string {
@@ -83,6 +136,7 @@ func (tf *TokenField) renderTokens(focusedToken int) string {
 
 	line := 0
 	index := 0
+	renderedIndex := 0
 	var sbLinePlain strings.Builder // Tracks plain text for layout decisions
 	var sbLine strings.Builder      // Tracks actual rendered output
 	for i, token := range tf.tokens {
@@ -113,15 +167,18 @@ func (tf *TokenField) renderTokens(focusedToken int) string {
 		}
 		tf.tokens[i].end = tf.tokens[i].start + len(token.word)
 		tf.tokens[i].line = line
+		tf.tokens[i].index = renderedIndex
 		log.Println(tf.tokens[i])
 
 		renderedWord := token.word
 		if focusedToken == i {
 			renderedWord = lipgloss.NewStyle().Background(lipgloss.Color("1")).Render(renderedWord)
 		}
+
 		sbLine.WriteString(renderedWord)
 		sbLinePlain.WriteString(token.word)
 		index = tf.tokens[i].end
+		renderedIndex++
 		log.Println("========================================")
 	}
 

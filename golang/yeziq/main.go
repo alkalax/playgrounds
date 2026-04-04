@@ -20,10 +20,11 @@ type Model struct {
 }
 
 type TokenField struct {
-	tokens  []Token
-	width   int
-	height  int
-	padding int
+	tokens            []Token
+	width             int
+	height            int
+	horizontalPadding int
+	verticalPadding   int
 }
 
 type Token struct {
@@ -32,6 +33,7 @@ type Token struct {
 	start int
 	end   int
 	line  int
+	index int
 }
 
 func initialModel() *Model {
@@ -44,8 +46,8 @@ func initialModel() *Model {
 	}
 	return &Model{
 		tokenField: TokenField{
-			tokens:  tokens,
-			padding: 1,
+			tokens:            tokens,
+			horizontalPadding: 1,
 		},
 	}
 }
@@ -64,26 +66,84 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "l", "right":
-			if m.index < len(m.tokenField.tokens) {
+			if m.index < len(m.tokenField.tokens)-1 {
 				m.index++
 			}
+		case "h", "left":
+			if m.index > 0 {
+				m.index--
+			}
+		case "j", "down":
+			m.index = m.tokenField.switchFocusVertically(m.index, false)
+		case "k", "up":
+			m.index = m.tokenField.switchFocusVertically(m.index, true)
 		}
 	}
 
 	return m, nil
 }
 
+func (tf *TokenField) switchFocusVertically(currentIndex int, up bool) int {
+	currToken := 0
+	for i, token := range tf.tokens {
+		if token.index == currentIndex {
+			currToken = i
+			break
+		}
+	}
+
+	focusedToken := tf.tokens[currToken]
+	lastLine := tf.tokens[len(tf.tokens)-1].line
+	if (up && focusedToken.line == 0) || (!up && focusedToken.line == lastLine) {
+		return currentIndex
+	}
+
+	newLine := focusedToken.line
+	if up {
+		newLine--
+	} else {
+		newLine++
+	}
+
+	candidate := 0
+	for i, token := range tf.tokens {
+		if token.line == newLine {
+			candidate = i
+			break
+		}
+	}
+
+	for {
+		if candidate >= len(tf.tokens) {
+			return len(tf.tokens) - 1
+		}
+
+		candidateToken := tf.tokens[candidate]
+		if candidateToken.line == focusedToken.line {
+			return candidate - 1
+		}
+
+		if candidateToken.end >= focusedToken.start {
+			return candidate
+		}
+
+		candidate++
+	}
+}
+
 func (tf *TokenField) renderTokens(focusedToken int) string {
-	var netLineLength int = tf.width - 2*tf.padding
+	var netLineLength int = tf.width - 2*tf.horizontalPadding
 	var sbTokenField strings.Builder
 
 	line := 0
 	index := 0
-	var sbLine strings.Builder
+	renderedIndex := 0
+	var sbLinePlain strings.Builder // Tracks plain text for layout decisions
+	var sbLine strings.Builder      // Tracks actual rendered output
 	for i, token := range tf.tokens {
 		log.Println("========================================")
 		log.Println("Word:", token.word)
-		lineWithWord := sbLine.String() + token.word
+		lineWithWord := sbLinePlain.String() + token.word
 		if index > 0 {
 			// Accounting for a space if not first word in line
 			lineWithWord += " "
@@ -95,6 +155,7 @@ func (tf *TokenField) renderTokens(focusedToken int) string {
 			sbTokenField.WriteString(sbLine.String())
 			sbTokenField.WriteRune('\n')
 			sbLine.Reset()
+			sbLinePlain.Reset()
 			line++
 			index = 0
 		}
@@ -103,17 +164,22 @@ func (tf *TokenField) renderTokens(focusedToken int) string {
 		if index > 0 {
 			tf.tokens[i].start++
 			sbLine.WriteRune(' ')
+			sbLinePlain.WriteRune(' ')
 		}
 		tf.tokens[i].end = tf.tokens[i].start + len(token.word)
 		tf.tokens[i].line = line
+		tf.tokens[i].index = renderedIndex
 		log.Println(tf.tokens[i])
 
 		renderedWord := token.word
 		if focusedToken == i {
 			renderedWord = lipgloss.NewStyle().Background(lipgloss.Color("1")).Render(renderedWord)
 		}
+
 		sbLine.WriteString(renderedWord)
+		sbLinePlain.WriteString(token.word)
 		index = tf.tokens[i].end
+		renderedIndex++
 		log.Println("========================================")
 	}
 
@@ -131,7 +197,7 @@ func (tf *TokenField) View(width, height, focusedToken int) string {
 	return lipgloss.NewStyle().
 		Width(tf.width).
 		Height(tf.height).
-		Padding(tf.padding, tf.padding).
+		Padding(tf.verticalPadding, tf.horizontalPadding).
 		Border(lipgloss.NormalBorder()).
 		Render(tf.renderTokens(focusedToken))
 }

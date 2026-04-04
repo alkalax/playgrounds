@@ -79,11 +79,12 @@ func (tf *TokenField) renderTokens(focusedToken int) string {
 
 	line := 0
 	index := 0
-	var sbLine strings.Builder
+	var sbLinePlain strings.Builder // Tracks plain text for layout decisions
+	var sbLine strings.Builder      // Tracks actual rendered output
 	for i, token := range tf.tokens {
 		log.Println("========================================")
 		log.Println("Word:", token.word)
-		lineWithWord := sbLine.String() + token.word
+		lineWithWord := sbLinePlain.String() + token.word
 		if index > 0 {
 			// Accounting for a space if not first word in line
 			lineWithWord += " "
@@ -95,6 +96,7 @@ func (tf *TokenField) renderTokens(focusedToken int) string {
 			sbTokenField.WriteString(sbLine.String())
 			sbTokenField.WriteRune('\n')
 			sbLine.Reset()
+			sbLinePlain.Reset()
 			line++
 			index = 0
 		}
@@ -103,6 +105,7 @@ func (tf *TokenField) renderTokens(focusedToken int) string {
 		if index > 0 {
 			tf.tokens[i].start++
 			sbLine.WriteRune(' ')
+			sbLinePlain.WriteRune(' ')
 		}
 		tf.tokens[i].end = tf.tokens[i].start + len(token.word)
 		tf.tokens[i].line = line
@@ -113,6 +116,7 @@ func (tf *TokenField) renderTokens(focusedToken int) string {
 			renderedWord = lipgloss.NewStyle().Background(lipgloss.Color("1")).Render(renderedWord)
 		}
 		sbLine.WriteString(renderedWord)
+		sbLinePlain.WriteString(token.word)
 		index = tf.tokens[i].end
 		log.Println("========================================")
 	}

@@ -32,7 +32,7 @@ type TokenField struct {
 }
 
 type Token struct {
-	id    int
+	sep   bool
 	word  string
 	start int
 	end   int
@@ -42,21 +42,23 @@ type Token struct {
 
 func defaultStyles() Styles {
 	return Styles{
-		focusedToken: lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10")),
+		focusedToken: lipgloss.NewStyle().Bold(true).Underline(true).Foreground(lipgloss.Color("10")),
 	}
 }
 
-func initialModel() *Model {
+func tokenize(text string) []Token {
 	tokens := []Token{}
-	for i, word := range strings.Split(sample, " ") {
-		tokens = append(tokens, Token{
-			id:   i,
-			word: word,
-		})
+	for word := range strings.SplitSeq(text, " ") {
+		tokens = append(tokens, Token{word: word})
 	}
+
+	return tokens
+}
+
+func initialModel() *Model {
 	return &Model{
 		tokenField: TokenField{
-			tokens:            tokens,
+			tokens:            tokenize(sample),
 			horizontalPadding: 1,
 		},
 	}

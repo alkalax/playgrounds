@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package provider;
+
+// The go package were the generated code will live
+option go_package = "./proto";
+
+service Provider {
+  rpc GetStatus (StatusRequest) returns (StatusResponse);
+}
+
+message StatusRequest {}
+
+message StatusResponse {
+  string message = 1;
+  bool online = 2;
+}

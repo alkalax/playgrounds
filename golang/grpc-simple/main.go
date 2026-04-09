@@ -8,6 +8,7 @@ import (
 	pb "alkalax/grpc-simple/proto"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type server struct {
@@ -29,6 +30,7 @@ func main() {
 
 	srv := grpc.NewServer()
 	pb.RegisterProviderServer(srv, &server{})
+	reflection.Register(srv)
 
 	log.Printf("server listening at %v", listener.Addr())
 	if err := srv.Serve(listener); err != nil {

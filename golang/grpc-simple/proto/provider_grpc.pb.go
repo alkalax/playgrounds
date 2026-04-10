@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	Provider_GetStatus_FullMethodName = "/provider.Provider/GetStatus"
+	Provider_Add_FullMethodName       = "/provider.Provider/Add"
 )
 
 // ProviderClient is the client API for Provider service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProviderClient interface {
 	GetStatus(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusResponse, error)
+	Add(ctx context.Context, in *Nums, opts ...grpc.CallOption) (*Sum, error)
 }
 
 type providerClient struct {
@@ -47,11 +49,22 @@ func (c *providerClient) GetStatus(ctx context.Context, in *StatusRequest, opts 
 	return out, nil
 }
 
+func (c *providerClient) Add(ctx context.Context, in *Nums, opts ...grpc.CallOption) (*Sum, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Sum)
+	err := c.cc.Invoke(ctx, Provider_Add_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProviderServer is the server API for Provider service.
 // All implementations must embed UnimplementedProviderServer
 // for forward compatibility.
 type ProviderServer interface {
 	GetStatus(context.Context, *StatusRequest) (*StatusResponse, error)
+	Add(context.Context, *Nums) (*Sum, error)
 	mustEmbedUnimplementedProviderServer()
 }
 
@@ -64,6 +77,9 @@ type UnimplementedProviderServer struct{}
 
 func (UnimplementedProviderServer) GetStatus(context.Context, *StatusRequest) (*StatusResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetStatus not implemented")
+}
+func (UnimplementedProviderServer) Add(context.Context, *Nums) (*Sum, error) {
+	return nil, status.Error(codes.Unimplemented, "method Add not implemented")
 }
 func (UnimplementedProviderServer) mustEmbedUnimplementedProviderServer() {}
 func (UnimplementedProviderServer) testEmbeddedByValue()                  {}
@@ -104,6 +120,24 @@ func _Provider_GetStatus_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Provider_Add_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Nums)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProviderServer).Add(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Provider_Add_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProviderServer).Add(ctx, req.(*Nums))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Provider_ServiceDesc is the grpc.ServiceDesc for Provider service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +148,10 @@ var Provider_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetStatus",
 			Handler:    _Provider_GetStatus_Handler,
+		},
+		{
+			MethodName: "Add",
+			Handler:    _Provider_Add_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -7,6 +7,7 @@ option go_package = "./proto";
 
 service Provider {
   rpc GetStatus (StatusRequest) returns (StatusResponse);
+  rpc Add (Nums) returns (Sum);
 }
 
 message StatusRequest {}
@@ -14,4 +15,13 @@ message StatusRequest {}
 message StatusResponse {
   string message = 1;
   bool online = 2;
+}
+
+message Nums {
+  int32 a = 1;
+  int32 b = 2; 
+}
+
+message Sum {
+  int32 sum = 1;
 }

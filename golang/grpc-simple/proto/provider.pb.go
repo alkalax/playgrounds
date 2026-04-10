@@ -109,6 +109,102 @@ func (x *StatusResponse) GetOnline() bool {
 	return false
 }
 
+type Nums struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	A             int32                  `protobuf:"varint,1,opt,name=a,proto3" json:"a,omitempty"`
+	B             int32                  `protobuf:"varint,2,opt,name=b,proto3" json:"b,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Nums) Reset() {
+	*x = Nums{}
+	mi := &file_provider_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Nums) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Nums) ProtoMessage() {}
+
+func (x *Nums) ProtoReflect() protoreflect.Message {
+	mi := &file_provider_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Nums.ProtoReflect.Descriptor instead.
+func (*Nums) Descriptor() ([]byte, []int) {
+	return file_provider_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Nums) GetA() int32 {
+	if x != nil {
+		return x.A
+	}
+	return 0
+}
+
+func (x *Nums) GetB() int32 {
+	if x != nil {
+		return x.B
+	}
+	return 0
+}
+
+type Sum struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Sum           int32                  `protobuf:"varint,1,opt,name=sum,proto3" json:"sum,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Sum) Reset() {
+	*x = Sum{}
+	mi := &file_provider_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Sum) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Sum) ProtoMessage() {}
+
+func (x *Sum) ProtoReflect() protoreflect.Message {
+	mi := &file_provider_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Sum.ProtoReflect.Descriptor instead.
+func (*Sum) Descriptor() ([]byte, []int) {
+	return file_provider_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Sum) GetSum() int32 {
+	if x != nil {
+		return x.Sum
+	}
+	return 0
+}
+
 var File_provider_proto protoreflect.FileDescriptor
 
 const file_provider_proto_rawDesc = "" +
@@ -117,9 +213,15 @@ const file_provider_proto_rawDesc = "" +
 	"\rStatusRequest\"B\n" +
 	"\x0eStatusResponse\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\x12\x16\n" +
-	"\x06online\x18\x02 \x01(\bR\x06online2J\n" +
+	"\x06online\x18\x02 \x01(\bR\x06online\"\"\n" +
+	"\x04Nums\x12\f\n" +
+	"\x01a\x18\x01 \x01(\x05R\x01a\x12\f\n" +
+	"\x01b\x18\x02 \x01(\x05R\x01b\"\x17\n" +
+	"\x03Sum\x12\x10\n" +
+	"\x03sum\x18\x01 \x01(\x05R\x03sum2p\n" +
 	"\bProvider\x12>\n" +
-	"\tGetStatus\x12\x17.provider.StatusRequest\x1a\x18.provider.StatusResponseB\tZ\a./protob\x06proto3"
+	"\tGetStatus\x12\x17.provider.StatusRequest\x1a\x18.provider.StatusResponse\x12$\n" +
+	"\x03Add\x12\x0e.provider.Nums\x1a\r.provider.SumB\tZ\a./protob\x06proto3"
 
 var (
 	file_provider_proto_rawDescOnce sync.Once
@@ -133,16 +235,20 @@ func file_provider_proto_rawDescGZIP() []byte {
 	return file_provider_proto_rawDescData
 }
 
-var file_provider_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_provider_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_provider_proto_goTypes = []any{
 	(*StatusRequest)(nil),  // 0: provider.StatusRequest
 	(*StatusResponse)(nil), // 1: provider.StatusResponse
+	(*Nums)(nil),           // 2: provider.Nums
+	(*Sum)(nil),            // 3: provider.Sum
 }
 var file_provider_proto_depIdxs = []int32{
 	0, // 0: provider.Provider.GetStatus:input_type -> provider.StatusRequest
-	1, // 1: provider.Provider.GetStatus:output_type -> provider.StatusResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	2, // 1: provider.Provider.Add:input_type -> provider.Nums
+	1, // 2: provider.Provider.GetStatus:output_type -> provider.StatusResponse
+	3, // 3: provider.Provider.Add:output_type -> provider.Sum
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -159,7 +265,7 @@ func file_provider_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_provider_proto_rawDesc), len(file_provider_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

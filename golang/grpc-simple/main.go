@@ -22,6 +22,12 @@ func (s *server) GetStatus(ctx context.Context, in *pb.StatusRequest) (*pb.Statu
 	}, nil
 }
 
+func (s *server) Add(ctx context.Context, in *pb.Nums) (*pb.Sum, error) {
+	return &pb.Sum{
+		Sum: in.A + in.B,
+	}, nil
+}
+
 func main() {
 	listener, err := net.Listen("tcp", ":50051")
 	if err != nil {

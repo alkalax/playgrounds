@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package taskmonitor;
+
+option go_package = "./proto";
+
+message TaskRequest {
+  string task_id = 1;
+}
+
+message TaskStatus {
+  string status_message = 1;
+  int32 progress_percentage = 2;
+}
+
+service TaskService {
+  rpc GetTaskUpdates(TaskRequest) returns (stream TaskStatus);
+}

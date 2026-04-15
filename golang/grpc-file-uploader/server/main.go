@@ -14,7 +14,7 @@ type server struct {
 	pb.UnimplementedFileServiceServer
 }
 
-func (s *server) UploadFiles(stream pb.FileService_UploadFileServer) error {
+func (s *server) UploadFile(stream pb.FileService_UploadFileServer) error {
 	var totalSize int32
 
 	for {

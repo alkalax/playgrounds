@@ -1,6 +1,7 @@
 package main
 
 import (
+	"alkalax/item-manager/internal/storage"
 	"flag"
 	"fmt"
 	"os"
@@ -30,7 +31,14 @@ func main() {
 			os.Exit(1)
 		}
 
-		fmt.Printf("Creating item '%s', count %d\n", *itemName, *itemCount)
+		fmt.Println("Creating item...")
+		err = storage.SaveItem(*itemName, *itemCount)
+		if err != nil {
+			fmt.Printf("failed to save item: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Item '%s' saved.\n", *itemName)
 	default:
 		fmt.Printf("unknown subcommand: %s\n", os.Args[1])
 		os.Exit(1)

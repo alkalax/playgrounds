@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+const storageFile = "items.json"
+
 func main() {
 	createCmd := flag.NewFlagSet("create", flag.ExitOnError)
 	itemName := createCmd.String("name", "", "Name of the item to create")
@@ -15,6 +17,16 @@ func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("expected 'create' or other subcommands")
 		os.Exit(1)
+	}
+
+	itemManager := storage.NewItemManager(storageFile)
+	if err := itemManager.LoadItems(); err != nil {
+		fmt.Printf("failed to load items: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println(len(itemManager.Items))
+	for _, item := range itemManager.Items {
+		fmt.Println(item)
 	}
 
 	switch os.Args[1] {

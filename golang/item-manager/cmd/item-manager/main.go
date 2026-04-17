@@ -24,10 +24,6 @@ func main() {
 		fmt.Printf("failed to load items: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Println(len(itemManager.Items))
-	for _, item := range itemManager.Items {
-		fmt.Println(item)
-	}
 
 	switch os.Args[1] {
 	case "create":
@@ -44,9 +40,13 @@ func main() {
 		}
 
 		fmt.Println("Creating item...")
-		err = itemManager.AddItem(*itemName, *itemCount)
-		if err != nil {
-			fmt.Printf("failed to save item: %v\n", err)
+		if err = itemManager.AddItem(*itemName, *itemCount); err != nil {
+			fmt.Printf("failed to add item: %v\n", err)
+			os.Exit(1)
+		}
+
+		if err = itemManager.SaveItems(); err != nil {
+			fmt.Printf("failed to save items: %v\n", err)
 			os.Exit(1)
 		}
 

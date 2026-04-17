@@ -49,6 +49,19 @@ func (im *ItemManager) LoadItems() error {
 	return nil
 }
 
+func (im *ItemManager) SaveItems() error {
+	data, err := json.MarshalIndent(im.Items, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	if err = os.WriteFile(im.storageFile, data, 0644); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (im *ItemManager) AddItem(name string, count int) error {
 	for _, item := range im.Items {
 		if item.Name == name {

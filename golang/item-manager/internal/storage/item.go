@@ -49,18 +49,17 @@ func (im *ItemManager) LoadItems() error {
 	return nil
 }
 
-func SaveItem(name string, count int) error {
-	item := Item{
+func (im *ItemManager) AddItem(name string, count int) error {
+	for _, item := range im.Items {
+		if item.Name == name {
+			return fmt.Errorf("item '%s' already exists", name)
+		}
+	}
+
+	im.Items = append(im.Items, Item{
 		Name:  name,
 		Count: count,
-	}
+	})
 
-	data, err := json.MarshalIndent(item, "", "  ")
-	if err != nil {
-		return fmt.Errorf("could not encode json: %w", err)
-	}
-
-	filename := fmt.Sprintf("%s.json", item.Name)
-
-	return os.WriteFile(filename, data, 0644)
+	return nil
 }

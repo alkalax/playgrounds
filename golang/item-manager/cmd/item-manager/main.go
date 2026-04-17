@@ -44,7 +44,7 @@ func main() {
 		}
 
 		fmt.Println("Creating item...")
-		err = storage.SaveItem(*itemName, *itemCount)
+		err = itemManager.AddItem(*itemName, *itemCount)
 		if err != nil {
 			fmt.Printf("failed to save item: %v\n", err)
 			os.Exit(1)

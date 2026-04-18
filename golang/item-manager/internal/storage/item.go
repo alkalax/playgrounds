@@ -49,7 +49,7 @@ func (im *ItemManager) LoadItems() error {
 	return nil
 }
 
-func (im *ItemManager) SaveItems() error {
+func (im *ItemManager) saveItems() error {
 	data, err := json.MarshalIndent(im.Items, "", "  ")
 	if err != nil {
 		return err
@@ -73,6 +73,10 @@ func (im *ItemManager) AddItem(name string, count int) error {
 		Name:  name,
 		Count: count,
 	})
+
+	if err := im.saveItems(); err != nil {
+		return fmt.Errorf("failed to save items: %v", err)
+	}
 
 	return nil
 }

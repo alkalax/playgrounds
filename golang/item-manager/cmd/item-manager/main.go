@@ -22,10 +22,6 @@ func main() {
 	}
 
 	itemManager := storage.NewItemManager(storageFile)
-	//if err := itemManager.LoadItems(); err != nil {
-	//	fmt.Printf("failed to load items: %v\n", err)
-	//	os.Exit(1)
-	//}
 
 	switch os.Args[1] {
 	case "create":
@@ -53,7 +49,18 @@ func main() {
 			fmt.Printf("error while parsing: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Println("list")
+
+		items, err := itemManager.GetItems()
+		if err != nil {
+			fmt.Printf("failed to get items: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("%-15s %-10s\n", "NAME", "COUNT")
+		fmtString := "%-15s %-10d\n"
+		for _, item := range items {
+			fmt.Printf(fmtString, item.Name, item.Count)
+		}
 	default:
 		fmt.Printf("unknown subcommand: %s\n", os.Args[1])
 		os.Exit(1)

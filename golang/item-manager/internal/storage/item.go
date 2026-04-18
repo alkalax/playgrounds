@@ -84,3 +84,11 @@ func (im *ItemManager) AddItem(name string, count int) error {
 
 	return nil
 }
+
+func (im *ItemManager) GetItems() ([]Item, error) {
+	if err := im.loadItems(); err != nil {
+		return nil, fmt.Errorf("failed to load items: %v", err)
+	}
+
+	return im.Items, nil
+}

@@ -24,7 +24,7 @@ func NewItemManager(storageFile string) *ItemManager {
 	}
 }
 
-func (im *ItemManager) LoadItems() error {
+func (im *ItemManager) loadItems() error {
 	_, err := os.Stat(im.storageFile)
 	if errors.Is(err, os.ErrNotExist) {
 		im.Items = []Item{}
@@ -63,6 +63,10 @@ func (im *ItemManager) saveItems() error {
 }
 
 func (im *ItemManager) AddItem(name string, count int) error {
+	if err := im.loadItems(); err != nil {
+		return fmt.Errorf("failed to load items: %v", err)
+	}
+
 	for _, item := range im.Items {
 		if item.Name == name {
 			return fmt.Errorf("item '%s' already exists", name)

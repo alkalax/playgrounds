@@ -14,16 +14,18 @@ func main() {
 	itemName := createCmd.String("name", "", "Name of the item to create")
 	itemCount := createCmd.Int("count", 1, "Number of items to create")
 
+	listCmd := flag.NewFlagSet("list", flag.ExitOnError)
+
 	if len(os.Args) < 2 {
 		fmt.Println("expected 'create' or other subcommands")
 		os.Exit(1)
 	}
 
 	itemManager := storage.NewItemManager(storageFile)
-	if err := itemManager.LoadItems(); err != nil {
-		fmt.Printf("failed to load items: %v\n", err)
-		os.Exit(1)
-	}
+	//if err := itemManager.LoadItems(); err != nil {
+	//	fmt.Printf("failed to load items: %v\n", err)
+	//	os.Exit(1)
+	//}
 
 	switch os.Args[1] {
 	case "create":
@@ -45,12 +47,13 @@ func main() {
 			os.Exit(1)
 		}
 
-		if err = itemManager.SaveItems(); err != nil {
-			fmt.Printf("failed to save items: %v\n", err)
+		fmt.Printf("Item '%s' saved.\n", *itemName)
+	case "list":
+		if err := listCmd.Parse(os.Args[2:]); err != nil {
+			fmt.Printf("error while parsing: %v\n", err)
 			os.Exit(1)
 		}
-
-		fmt.Printf("Item '%s' saved.\n", *itemName)
+		fmt.Println("list")
 	default:
 		fmt.Printf("unknown subcommand: %s\n", os.Args[1])
 		os.Exit(1)

@@ -92,3 +92,27 @@ func (im *ItemManager) GetItems() ([]Item, error) {
 
 	return im.Items, nil
 }
+
+func (im *ItemManager) DeleteItem(name string) error {
+	if err := im.loadItems(); err != nil {
+		return fmt.Errorf("failed to load items: %v", err)
+	}
+
+	for i, item := range im.Items {
+		if item.Name == name {
+			if i < len(im.Items)-1 {
+				im.Items = append(im.Items[:i], im.Items[i+1:]...)
+			} else {
+				im.Items = im.Items[:i]
+			}
+
+			if err := im.saveItems(); err != nil {
+				return fmt.Errorf("failed to save items: %v", err)
+			}
+
+			return nil
+		}
+	}
+
+	return fmt.Errorf("item not found")
+}

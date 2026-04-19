@@ -7,8 +7,15 @@ import (
 	"os"
 )
 
+type StorageType int
+
+const (
+	JsonFile StorageType = iota
+)
+
 type ItemManager struct {
 	Items       []Item
+	StorageType StorageType
 	storageFile string
 }
 

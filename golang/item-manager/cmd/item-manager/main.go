@@ -7,7 +7,8 @@ import (
 	"os"
 )
 
-const storageFile = "items.json"
+// const storageFile = "items.json"
+const storageFile = "items.db"
 
 func main() {
 	createCmd := flag.NewFlagSet("create", flag.ExitOnError)
@@ -24,7 +25,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	itemManager := storage.NewItemManager(storageFile)
+	itemManager := storage.NewItemManager(storage.SQLite, storageFile)
 
 	switch os.Args[1] {
 	case "create":

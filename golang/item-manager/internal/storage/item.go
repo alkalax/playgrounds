@@ -32,7 +32,7 @@ func NewItemManager(storageFile string) *ItemManager {
 	}
 }
 
-func (im *ItemManager) loadItems() error {
+func (im *ItemManager) loadItemsJson() error {
 	_, err := os.Stat(im.storageFile)
 	if errors.Is(err, os.ErrNotExist) {
 		im.Items = []Item{}
@@ -57,7 +57,7 @@ func (im *ItemManager) loadItems() error {
 	return nil
 }
 
-func (im *ItemManager) saveItems() error {
+func (im *ItemManager) saveItemsJson() error {
 	data, err := json.MarshalIndent(im.Items, "", "  ")
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func (im *ItemManager) AddItem(name string, count int) error {
 }
 
 func (im *ItemManager) addItemJson(name string, count int) error {
-	if err := im.loadItems(); err != nil {
+	if err := im.loadItemsJson(); err != nil {
 		return fmt.Errorf("failed to load items: %v", err)
 	}
 
@@ -95,7 +95,7 @@ func (im *ItemManager) addItemJson(name string, count int) error {
 		Count: count,
 	})
 
-	if err := im.saveItems(); err != nil {
+	if err := im.saveItemsJson(); err != nil {
 		return fmt.Errorf("failed to save items: %v", err)
 	}
 
@@ -105,7 +105,7 @@ func (im *ItemManager) addItemJson(name string, count int) error {
 func (im *ItemManager) GetItems() ([]Item, error) {
 	switch im.StorageType {
 	case JsonFile:
-		if err := im.loadItems(); err != nil {
+		if err := im.loadItemsJson(); err != nil {
 			return nil, fmt.Errorf("failed to load items: %v", err)
 		}
 
@@ -125,7 +125,7 @@ func (im *ItemManager) DeleteItem(name string) error {
 }
 
 func (im *ItemManager) deleteItemJson(name string) error {
-	if err := im.loadItems(); err != nil {
+	if err := im.loadItemsJson(); err != nil {
 		return fmt.Errorf("failed to load items: %v", err)
 	}
 
@@ -137,7 +137,7 @@ func (im *ItemManager) deleteItemJson(name string) error {
 				im.Items = im.Items[:i]
 			}
 
-			if err := im.saveItems(); err != nil {
+			if err := im.saveItemsJson(); err != nil {
 				return fmt.Errorf("failed to save items: %v", err)
 			}
 

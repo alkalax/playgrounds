@@ -1,10 +1,13 @@
 package storage
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
+
+	_ "modernc.org/sqlite"
 )
 
 type StorageType int
@@ -25,9 +28,10 @@ type Item struct {
 	Count int    `json:"count"`
 }
 
-func NewItemManager(storageFile string) *ItemManager {
+func NewItemManager(storageType StorageType, storageFile string) *ItemManager {
 	return &ItemManager{
 		Items:       []Item{},
+		StorageType: storageType,
 		storageFile: storageFile,
 	}
 }
@@ -52,6 +56,38 @@ func (im *ItemManager) loadItemsJson() error {
 	err = json.Unmarshal(data, &im.Items)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (im *ItemManager) loadItemsSQLite() error {
+	db, err := sql.Open("sqlite", im.storageFile)
+	if err != nil {
+		return fmt.Errorf("failed to open database file: %v", err)
+	}
+	defer db.Close()
+
+	if _, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS Items (
+		Name TEXT PRIMARY KEY,
+		Count INTEGER
+	)
+	`); err != nil {
+		return fmt.Errorf("failed to create table: %v", err)
+	}
+
+	rows, err := db.Query("SELECT Name, Count FROM Items")
+	if err != nil {
+		return fmt.Errorf("failed to get items from table: %v", err)
+	}
+
+	for rows.Next() {
+		var item Item
+		if err = rows.Scan(&item.Name, &item.Count); err != nil {
+			return fmt.Errorf("failed to scan row: %v", err)
+		}
+		im.Items = append(im.Items, item)
 	}
 
 	return nil
@@ -109,10 +145,15 @@ func (im *ItemManager) GetItems() ([]Item, error) {
 			return nil, fmt.Errorf("failed to load items: %v", err)
 		}
 
-		return im.Items, nil
+	case SQLite:
+		if err := im.loadItemsSQLite(); err != nil {
+			return nil, fmt.Errorf("failed to load items: %v", err)
+		}
 	default:
 		return nil, fmt.Errorf("invalid storage type")
 	}
+
+	return im.Items, nil
 }
 
 func (im *ItemManager) DeleteItem(name string) error {

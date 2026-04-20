@@ -11,6 +11,7 @@ type StorageType int
 
 const (
 	JsonFile StorageType = iota
+	SQLite
 )
 
 type ItemManager struct {
@@ -70,6 +71,15 @@ func (im *ItemManager) saveItems() error {
 }
 
 func (im *ItemManager) AddItem(name string, count int) error {
+	switch im.StorageType {
+	case JsonFile:
+		return im.addItemJson(name, count)
+	default:
+		return fmt.Errorf("invalid storage type")
+	}
+}
+
+func (im *ItemManager) addItemJson(name string, count int) error {
 	if err := im.loadItems(); err != nil {
 		return fmt.Errorf("failed to load items: %v", err)
 	}
@@ -93,14 +103,28 @@ func (im *ItemManager) AddItem(name string, count int) error {
 }
 
 func (im *ItemManager) GetItems() ([]Item, error) {
-	if err := im.loadItems(); err != nil {
-		return nil, fmt.Errorf("failed to load items: %v", err)
-	}
+	switch im.StorageType {
+	case JsonFile:
+		if err := im.loadItems(); err != nil {
+			return nil, fmt.Errorf("failed to load items: %v", err)
+		}
 
-	return im.Items, nil
+		return im.Items, nil
+	default:
+		return nil, fmt.Errorf("invalid storage type")
+	}
 }
 
 func (im *ItemManager) DeleteItem(name string) error {
+	switch im.StorageType {
+	case JsonFile:
+		return im.deleteItemJson(name)
+	default:
+		return fmt.Errorf("invalid storage type")
+	}
+}
+
+func (im *ItemManager) deleteItemJson(name string) error {
 	if err := im.loadItems(); err != nil {
 		return fmt.Errorf("failed to load items: %v", err)
 	}

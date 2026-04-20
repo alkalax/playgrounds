@@ -191,6 +191,8 @@ func (im *ItemManager) DeleteItem(name string) error {
 	switch im.StorageType {
 	case JsonFile:
 		return im.deleteItemJson(name)
+	case SQLite:
+		return im.deleteItemSQLite(name)
 	default:
 		return fmt.Errorf("invalid storage type")
 	}
@@ -211,6 +213,36 @@ func (im *ItemManager) deleteItemJson(name string) error {
 
 			if err := im.saveItemsJson(); err != nil {
 				return fmt.Errorf("failed to save items: %v", err)
+			}
+
+			return nil
+		}
+	}
+
+	return fmt.Errorf("item not found")
+}
+
+func (im *ItemManager) deleteItemSQLite(name string) error {
+	if err := im.loadItemsSQLite(); err != nil {
+		return err
+	}
+
+	db, err := sql.Open("sqlite", im.storageFile)
+	if err != nil {
+		return fmt.Errorf("failed to open database file: %v", err)
+	}
+	defer db.Close()
+
+	if _, err := db.Exec("DELETE FROM Items WHERE Name = ?", name); err != nil {
+		return fmt.Errorf("failed to delete item: %v", err)
+	}
+
+	for i, item := range im.Items {
+		if item.Name == name {
+			if i < len(im.Items)-1 {
+				im.Items = append(im.Items[:i], im.Items[i+1:]...)
+			} else {
+				im.Items = im.Items[:i]
 			}
 
 			return nil

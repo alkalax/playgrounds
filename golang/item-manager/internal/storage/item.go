@@ -110,6 +110,8 @@ func (im *ItemManager) AddItem(name string, count int) error {
 	switch im.StorageType {
 	case JsonFile:
 		return im.addItemJson(name, count)
+	case SQLite:
+		return im.addItemSQLite(name, count)
 	default:
 		return fmt.Errorf("invalid storage type")
 	}
@@ -134,6 +136,35 @@ func (im *ItemManager) addItemJson(name string, count int) error {
 	if err := im.saveItemsJson(); err != nil {
 		return fmt.Errorf("failed to save items: %v", err)
 	}
+
+	return nil
+}
+
+func (im *ItemManager) addItemSQLite(name string, count int) error {
+	if err := im.loadItemsSQLite(); err != nil {
+		return err
+	}
+
+	for _, item := range im.Items {
+		if item.Name == name {
+			return fmt.Errorf("item '%s' already exists", name)
+		}
+	}
+
+	db, err := sql.Open("sqlite", im.storageFile)
+	if err != nil {
+		return fmt.Errorf("failed to open database file: %v", err)
+	}
+	defer db.Close()
+
+	if _, err := db.Exec("INSERT INTO Items (Name, Count) VALUES (?, ?)", name, count); err != nil {
+		return fmt.Errorf("failed to create item: %v", err)
+	}
+
+	im.Items = append(im.Items, Item{
+		Name:  name,
+		Count: count,
+	})
 
 	return nil
 }

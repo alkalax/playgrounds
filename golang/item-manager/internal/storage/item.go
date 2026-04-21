@@ -24,8 +24,9 @@ type ItemManager struct {
 }
 
 type Item struct {
-	Name  string `json:"name"`
-	Count int    `json:"count"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Count       int    `json:"count"`
 }
 
 func NewItemManager(storageType StorageType, storageFile string) *ItemManager {
@@ -71,20 +72,21 @@ func (im *ItemManager) loadItemsSQLite() error {
 	if _, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS Items (
 		Name TEXT PRIMARY KEY,
+		Description TEXT,
 		Count INTEGER
 	)
 	`); err != nil {
 		return fmt.Errorf("failed to create table: %v", err)
 	}
 
-	rows, err := db.Query("SELECT Name, Count FROM Items")
+	rows, err := db.Query("SELECT Name, Description, Count FROM Items")
 	if err != nil {
 		return fmt.Errorf("failed to get items from table: %v", err)
 	}
 
 	for rows.Next() {
 		var item Item
-		if err = rows.Scan(&item.Name, &item.Count); err != nil {
+		if err = rows.Scan(&item.Name, &item.Description, &item.Count); err != nil {
 			return fmt.Errorf("failed to scan row: %v", err)
 		}
 		im.Items = append(im.Items, item)
@@ -106,18 +108,18 @@ func (im *ItemManager) saveItemsJson() error {
 	return nil
 }
 
-func (im *ItemManager) AddItem(name string, count int) error {
+func (im *ItemManager) AddItem(name string, description string, count int) error {
 	switch im.StorageType {
 	case JsonFile:
-		return im.addItemJson(name, count)
+		return im.addItemJson(name, description, count)
 	case SQLite:
-		return im.addItemSQLite(name, count)
+		return im.addItemSQLite(name, description, count)
 	default:
 		return fmt.Errorf("invalid storage type")
 	}
 }
 
-func (im *ItemManager) addItemJson(name string, count int) error {
+func (im *ItemManager) addItemJson(name string, description string, count int) error {
 	if err := im.loadItemsJson(); err != nil {
 		return fmt.Errorf("failed to load items: %v", err)
 	}
@@ -129,8 +131,9 @@ func (im *ItemManager) addItemJson(name string, count int) error {
 	}
 
 	im.Items = append(im.Items, Item{
-		Name:  name,
-		Count: count,
+		Name:        name,
+		Description: description,
+		Count:       count,
 	})
 
 	if err := im.saveItemsJson(); err != nil {
@@ -140,7 +143,7 @@ func (im *ItemManager) addItemJson(name string, count int) error {
 	return nil
 }
 
-func (im *ItemManager) addItemSQLite(name string, count int) error {
+func (im *ItemManager) addItemSQLite(name string, description string, count int) error {
 	if err := im.loadItemsSQLite(); err != nil {
 		return err
 	}
@@ -157,13 +160,14 @@ func (im *ItemManager) addItemSQLite(name string, count int) error {
 	}
 	defer db.Close()
 
-	if _, err := db.Exec("INSERT INTO Items (Name, Count) VALUES (?, ?)", name, count); err != nil {
+	if _, err := db.Exec("INSERT INTO Items (Name, Description, Count) VALUES (?, ?, ?)", name, description, count); err != nil {
 		return fmt.Errorf("failed to create item: %v", err)
 	}
 
 	im.Items = append(im.Items, Item{
-		Name:  name,
-		Count: count,
+		Name:        name,
+		Description: description,
+		Count:       count,
 	})
 
 	return nil

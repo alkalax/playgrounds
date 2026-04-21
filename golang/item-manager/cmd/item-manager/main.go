@@ -13,6 +13,7 @@ const storageFile = "items.db"
 func main() {
 	createCmd := flag.NewFlagSet("create", flag.ExitOnError)
 	createItemName := createCmd.String("name", "", "Name of the item to create")
+	itemDescription := createCmd.String("description", "", "Description of the item")
 	itemCount := createCmd.Int("count", 1, "Number of items to create")
 
 	listCmd := flag.NewFlagSet("list", flag.ExitOnError)
@@ -42,7 +43,7 @@ func main() {
 		}
 
 		fmt.Println("Creating item...")
-		if err = itemManager.AddItem(*createItemName, *itemCount); err != nil {
+		if err = itemManager.AddItem(*createItemName, *itemDescription, *itemCount); err != nil {
 			fmt.Printf("failed to add item: %v\n", err)
 			os.Exit(1)
 		}
@@ -60,10 +61,10 @@ func main() {
 			os.Exit(1)
 		}
 
-		fmt.Printf("%-15s %-10s\n", "NAME", "COUNT")
-		fmtString := "%-15s %-10d\n"
+		fmt.Printf("%-15s %-10s %-20s\n", "NAME", "COUNT", "DESCRIPTION")
+		fmtString := "%-15s %-10d %-20s\n"
 		for _, item := range items {
-			fmt.Printf(fmtString, item.Name, item.Count)
+			fmt.Printf(fmtString, item.Name, item.Count, item.Description)
 		}
 	case "delete":
 		if err := deleteCmd.Parse(os.Args[2:]); err != nil {

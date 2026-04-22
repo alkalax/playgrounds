@@ -1,14 +1,15 @@
 package main
 
 import (
-	"alkalax/item-manager/internal/storage"
+	"alkalax/item-manager/internal/storage/json"
 	"flag"
 	"fmt"
 	"os"
 )
 
-// const storageFile = "items.json"
-const storageFile = "items.db"
+const storageFile = "items.json"
+
+//const storageFile = "items.db"
 
 func main() {
 	createCmd := flag.NewFlagSet("create", flag.ExitOnError)
@@ -26,7 +27,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	itemManager := storage.NewItemManager(storage.SQLite, storageFile)
+	//itemManager := storage.NewItemManager(storage.SQLite, storageFile)
+	itemManager := json.NewStore(storageFile)
 
 	switch os.Args[1] {
 	case "create":

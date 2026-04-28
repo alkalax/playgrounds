@@ -7,14 +7,23 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
-type Balance struct {
-	Date             string            `yaml:"date"`
-	CurrencyBalances []CurrencyBalance `yaml:"balances"`
+type Money struct {
+	Amount   int    `yaml:"amount"`
+	Currency string `yaml:"currency"`
 }
 
-type CurrencyBalance struct {
-	Currency string `yaml:"currency"`
-	Total    int    `yaml:"total"`
+type Asset struct {
+	Name  string `yaml:"name"`
+	Value Money  `yaml:"value"`
+}
+
+type AccountReport struct {
+	Date   string  `yaml:"date"`
+	Assets []Asset `yaml:"assets"`
+}
+
+type FinanceData struct {
+	Reports []AccountReport `yaml:"reports"`
 }
 
 func main() {
@@ -24,7 +33,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	var balance Balance
+	var balance FinanceData
 	if err = yaml.Unmarshal(file, &balance); err != nil {
 		fmt.Printf("error while unmarshalling yaml: %v\n", err)
 		os.Exit(1)

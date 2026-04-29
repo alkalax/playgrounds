@@ -17,9 +17,15 @@ type Asset struct {
 	Value Money  `yaml:"value"`
 }
 
+type Transation struct {
+	Description string `yaml:"description"`
+	Value       Money  `yaml:"value"`
+}
+
 type AccountReport struct {
-	Date   string  `yaml:"date"`
-	Assets []Asset `yaml:"assets"`
+	Date        string       `yaml:"date"`
+	Assets      []Asset      `yaml:"assets"`
+	Transations []Transation `yaml:"transations"`
 }
 
 type FinanceData struct {

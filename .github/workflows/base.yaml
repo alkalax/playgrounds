@@ -6,6 +6,8 @@ on:
 jobs:
   test:
     runs-on: [self-hosted]
+    container:
+      image: alpine
 
     steps:
       - run: hostname

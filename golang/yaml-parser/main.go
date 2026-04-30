@@ -23,13 +23,33 @@ type Transation struct {
 }
 
 type AccountReport struct {
-	Date        string       `yaml:"date"`
-	Assets      []Asset      `yaml:"assets"`
-	Transations []Transation `yaml:"transations"`
+	Date                 string       `yaml:"date"`
+	Assets               []Asset      `yaml:"assets"`
+	Transations          []Transation `yaml:"transations"`
+	ExchangeRateEURToRSD float64      `yaml:"eur_to_rsd"`
 }
 
 type FinanceData struct {
 	Reports []AccountReport `yaml:"reports"`
+}
+
+func (report *AccountReport) GetTotalAssetsCurrency(currency string) int {
+	total := 0
+	for _, asset := range report.Assets {
+		if asset.Value.Currency == currency {
+			total += asset.Value.Amount
+		}
+	}
+
+	return total
+}
+
+func ConvertEURToRSD(amount int, exchangeRate float64) int {
+	return int(float64(amount) * exchangeRate)
+}
+
+func ConvertRSDToEUR(amount int, exchangeRate float64) int {
+	return int(float64(amount) / exchangeRate)
 }
 
 func main() {
@@ -46,4 +66,15 @@ func main() {
 	}
 
 	fmt.Printf("%v\n", balance)
+
+	assetsRSD := balance.Reports[0].GetTotalAssetsCurrency("RSD")
+	fmt.Printf("Assets RSD: %d RSD\n", assetsRSD)
+
+	assetsEUR := balance.Reports[0].GetTotalAssetsCurrency("EUR")
+	fmt.Printf("Assets EUR: %d EUR\n", assetsEUR)
+
+	totalRSD := assetsRSD + ConvertEURToRSD(assetsEUR, balance.Reports[0].ExchangeRateEURToRSD)
+	totalEUR := ConvertRSDToEUR(totalRSD, balance.Reports[0].ExchangeRateEURToRSD)
+	fmt.Printf("Total: %d RSD (%d EUR)\n", totalRSD, totalEUR)
+
 }

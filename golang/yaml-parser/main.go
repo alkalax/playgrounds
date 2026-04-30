@@ -44,6 +44,14 @@ func (report *AccountReport) GetTotalAssetsCurrency(currency string) int {
 	return total
 }
 
+func ConvertEURToRSD(amount int, exchangeRate float64) int {
+	return int(float64(amount) * exchangeRate)
+}
+
+func ConvertRSDToEUR(amount int, exchangeRate float64) int {
+	return int(float64(amount) / exchangeRate)
+}
+
 func main() {
 	file, err := os.ReadFile("balance.yaml")
 	if err != nil {
@@ -59,6 +67,14 @@ func main() {
 
 	fmt.Printf("%v\n", balance)
 
-	fmt.Printf("Assets RSD: %d RSD\n", balance.Reports[0].GetTotalAssetsCurrency("RSD"))
-	fmt.Printf("Assets EUR: %d EUR\n", balance.Reports[0].GetTotalAssetsCurrency("EUR"))
+	assetsRSD := balance.Reports[0].GetTotalAssetsCurrency("RSD")
+	fmt.Printf("Assets RSD: %d RSD\n", assetsRSD)
+
+	assetsEUR := balance.Reports[0].GetTotalAssetsCurrency("EUR")
+	fmt.Printf("Assets EUR: %d EUR\n", assetsEUR)
+
+	totalRSD := assetsRSD + ConvertEURToRSD(assetsEUR, balance.Reports[0].ExchangeRateEURToRSD)
+	totalEUR := ConvertRSDToEUR(totalRSD, balance.Reports[0].ExchangeRateEURToRSD)
+	fmt.Printf("Total: %d RSD (%d EUR)\n", totalRSD, totalEUR)
+
 }

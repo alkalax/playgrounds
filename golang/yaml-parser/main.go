@@ -23,9 +23,10 @@ type Transation struct {
 }
 
 type AccountReport struct {
-	Date        string       `yaml:"date"`
-	Assets      []Asset      `yaml:"assets"`
-	Transations []Transation `yaml:"transations"`
+	Date                 string       `yaml:"date"`
+	Assets               []Asset      `yaml:"assets"`
+	Transations          []Transation `yaml:"transations"`
+	ExchangeRateEURToRSD float64      `yaml:"eur_to_rsd"`
 }
 
 type FinanceData struct {

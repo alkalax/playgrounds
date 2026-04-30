@@ -6,8 +6,9 @@ on:
 jobs:
   test:
     runs-on: [self-hosted]
-    container:
-      image: alpine
+    #container:
+    #  image: python:3.11-alpine3.22
 
     steps:
-      - run: hostname
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/python-action

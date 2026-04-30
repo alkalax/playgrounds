@@ -1,0 +1,7 @@
+name: Python Action
+description: Testing repo actions
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: python ${{ github.action_path }}/script.py

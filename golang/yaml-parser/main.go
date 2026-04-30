@@ -33,6 +33,17 @@ type FinanceData struct {
 	Reports []AccountReport `yaml:"reports"`
 }
 
+func (report *AccountReport) GetTotalAssetsCurrency(currency string) int {
+	total := 0
+	for _, asset := range report.Assets {
+		if asset.Value.Currency == currency {
+			total += asset.Value.Amount
+		}
+	}
+
+	return total
+}
+
 func main() {
 	file, err := os.ReadFile("balance.yaml")
 	if err != nil {
@@ -47,4 +58,7 @@ func main() {
 	}
 
 	fmt.Printf("%v\n", balance)
+
+	fmt.Printf("Assets RSD: %d RSD\n", balance.Reports[0].GetTotalAssetsCurrency("RSD"))
+	fmt.Printf("Assets EUR: %d EUR\n", balance.Reports[0].GetTotalAssetsCurrency("EUR"))
 }

@@ -1,7 +1,11 @@
 name: Base
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      who-to-greet:
+        type: string
+        description: Who to greet
 
 jobs:
   test:
@@ -16,4 +20,4 @@ jobs:
 
       - uses: ./.github/actions/js-action
         with:
-          who-to-greet: Milan
+          who-to-greet: ${{ inputs.who-to-greet }}

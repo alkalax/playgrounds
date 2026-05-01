@@ -1,0 +1,19 @@
+name: Boot Azure VM
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        type: string
+        required: true
+        description: Azure VM name
+
+jobs:
+  boot:
+    runs-on: [self-hosted]
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/login@v3
+        with:
+          creds: ${{ secrets.AZ_CREDS }}
+

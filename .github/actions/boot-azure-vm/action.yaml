@@ -1,0 +1,10 @@
+name: Boot Azure VM
+description: Start or stop Azure virtual machine
+inputs:
+  name:
+    type: string
+    required: true
+    description: Virtual machine name
+runs:
+  using: node24
+  main: dist/index.js

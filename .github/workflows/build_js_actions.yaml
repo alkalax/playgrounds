@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Build
-        working-directory: '.github/actions/js-action'
+        working-directory: '.github/actions/boot-azure-vm'
         run: |
           npm ci
           npm run build
@@ -27,5 +27,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@://github.com"
 
-          git add js-action/dist/index.js
+          git add boot-azure-vm/dist/index.js
           git diff --quiet && git diff --staged --quiet || (git commit -m "Build js-action" && git push)

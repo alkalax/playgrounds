@@ -5,9 +5,9 @@ import { ComputeManagementClient } from "@azure/arm-compute"
 try {
   const vmName = core.getInput('name')
   const subId = core.getInput('subscription-id')
-  const client = new azCompute.ComputeManagementClient(new DefaultAzureCredential(), subId)
+  const client = new ComputeManagementClient(new DefaultAzureCredential(), subId)
 
-  console.log("Passed.")
+  console.log("Passed:", vmName)
 } catch (err) {
   core.setFailed(err.message)
 }

@@ -1,12 +1,11 @@
 {
   "name": "js-action",
-  "type": "module",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "esbuild index.js --bundle --minify --format=cjs --platform=node --target=node25 --outfile=dist/index.js"
+    "build": "esbuild index.mjs --bundle --minify --format=cjs --platform=node --target=node24 --outfile=dist/index.js"
   },
   "keywords": [],
   "author": "",

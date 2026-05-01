@@ -2,7 +2,7 @@ import * as core from "@actions/core"
 import { DefaultAzureCredential } from "@azure/identity"
 import { ComputeManagementClient } from "@azure/arm-compute"
 
-try {
+async function main() {
   const vmName = core.getInput('name')
   const subId = core.getInput('subscription-id')
   const client = new ComputeManagementClient(new DefaultAzureCredential(), subId)
@@ -15,7 +15,7 @@ try {
     }
   }
 
-  console.log(`VM ${name} not found.`)
-} catch (err) {
-  core.setFailed(err.message)
+  console.log(`VM ${vmName} not found.`)
 }
+
+main().catch((err) => core.setFailed(err.message))

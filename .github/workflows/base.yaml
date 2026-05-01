@@ -1,7 +1,11 @@
 name: Base
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      who-to-greet:
+        type: string
+        description: Who to greet
 
 jobs:
   test:
@@ -10,10 +14,13 @@ jobs:
     #  image: python:3.11-alpine3.22
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - uses: ./.github/actions/python-action
 
       - uses: ./.github/actions/js-action
+        if: inputs.who-to-greet != '' 
         with:
-          who-to-greet: Milan
+          who-to-greet: ${{ inputs.who-to-greet }}
+      - uses: ./.github/actions/js-action
+        if: inputs.who-to-greet == '' 

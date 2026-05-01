@@ -5,6 +5,10 @@ inputs:
     type: string
     required: true
     description: Virtual machine name
+  subscription-id:
+    type: string
+    required: true
+    description: Azure subscription ID
 runs:
   using: node24
   main: dist/index.js

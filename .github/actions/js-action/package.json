@@ -1,0 +1,22 @@
+{
+  "name": "js-action",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "esbuild index.js --bundle --minify --format=esm --platform=node --target=node25 --outfile=dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.4",
+    "esbuild": "^0.28.0"
+  }
+}

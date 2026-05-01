@@ -1,0 +1,10 @@
+name: JS Custom Action
+description: Testing basic JS action
+input:
+  who-to-greet:
+    description: Who to greet
+    required: true
+    default: World
+runs:
+  using: node25
+  main: dist/index.js

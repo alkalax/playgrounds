@@ -1,6 +1,6 @@
 name: JS Custom Action
 description: Testing basic JS action
-input:
+inputs:
   who-to-greet:
     description: Who to greet
     required: true

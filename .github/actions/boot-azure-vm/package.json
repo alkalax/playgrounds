@@ -14,5 +14,8 @@
     "@actions/core": "^3.0.1",
     "@azure/arm-compute": "^24.0.0",
     "@azure/identity": "^4.13.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0"
   }
 }

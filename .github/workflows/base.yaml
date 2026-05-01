@@ -20,4 +20,4 @@ jobs:
 
       - uses: ./.github/actions/js-action
         with:
-          who-to-greet: ${{ inputs.who-to-greet }}
+          who-to-greet: ${{ inputs.who-to-greet || null }}

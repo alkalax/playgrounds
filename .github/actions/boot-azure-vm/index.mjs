@@ -2,10 +2,20 @@ import * as core from "@actions/core"
 import { DefaultAzureCredential } from "@azure/identity"
 import { ComputeManagementClient } from "@azure/arm-compute"
 
-const subId = 'a2b28c85-1948-4263-90ca-bade2bac4df4';
+async function main() {
+  const vmName = core.getInput('name')
+  const subId = core.getInput('subscription-id')
+  const client = new ComputeManagementClient(new DefaultAzureCredential(), subId)
 
-try {
-  const client = new azCompute.ComputeManagementClient(new DefaultAzureCredential(), subId)
-} catch (err) {
-  core.setFailed(err.message)
+  const vms = client.virtualMachines.listAll()
+  for await (const vm of vms) {
+    if (vm.name === vmName) {
+      console.log(`Found VM ${vm.name} in ${vm.id}`)
+      return
+    }
+  }
+
+  console.log(`VM ${vmName} not found.`)
 }
+
+main().catch((err) => core.setFailed(err.message))

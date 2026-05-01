@@ -2,7 +2,8 @@ name: Build JS custom actions
 
 on:
   push:
-    branches: [!main]
+    branches-ignore:
+      - main
     paths-ignore:
       - 'dist/**' # Prevent triggering a commit loop
 
@@ -27,4 +28,4 @@ jobs:
           git config user.email "github-actions[bot]@://github.com"
 
           git add js-action/dist/index.js
-          git diff --quiet && git diff --staged --quite || (git commit -m "Build js-action" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Build js-action" && git push)

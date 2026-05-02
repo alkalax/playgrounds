@@ -17,5 +17,6 @@ async function main() {
 
   console.log(`VM ${vmName} not found.`)
 }
+console.log("Test change")
 
 main().catch((err) => core.setFailed(err.message))

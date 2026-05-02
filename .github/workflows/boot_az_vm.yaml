@@ -17,7 +17,7 @@ jobs:
         with:
           creds: ${{ secrets.AZ_CREDS }}
 
-      - uses: .github/actions/boot-azure-vm
+      - uses: ./.github/actions/boot-azure-vm
         with:
           name: ${{ inputs.name }}
           subscription-id: ${{ vars.AZ_SUB_ID }}

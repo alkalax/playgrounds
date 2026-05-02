@@ -4,8 +4,9 @@ on:
   push:
     branches-ignore:
       - main
-    paths-ignore:
-      - 'dist/**' # Prevent triggering a commit loop
+    paths:
+      - '.github/actions/**' 
+      - '!.github/actions/**/dist/**'# Prevent triggering a commit loop
 
 jobs:
   build:

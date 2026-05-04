@@ -5,16 +5,28 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
+
+type VirtualMachineInfo struct {
+	SubscriptionId string
+	ResourceGroup  string
+}
+
+var vmInfo map[string]VirtualMachineInfo
 
 func checkError(error error, message string) {
 	if error != nil {
 		fmt.Printf("%s: %v\n", message, error)
 		os.Exit(1)
 	}
+}
+
+func init() {
+	vmInfo = map[string]VirtualMachineInfo{}
 }
 
 func main() {
@@ -41,8 +53,18 @@ func main() {
 
 				for _, vm := range vmResp.Value {
 					fmt.Println(*vm.Name)
+
+					parsedId, err := arm.ParseResourceID(*vm.ID)
+					checkError(err, "Failed to parse virtual machine ID")
+
+					vmInfo[*vm.Name] = VirtualMachineInfo{
+						SubscriptionId: *sub.SubscriptionID,
+						ResourceGroup:  parsedId.ResourceGroupName,
+					}
 				}
 			}
 		}
 	}
+
+	fmt.Println(vmInfo)
 }

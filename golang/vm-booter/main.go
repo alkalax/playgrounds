@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
 
@@ -30,7 +31,18 @@ func main() {
 		checkError(err, "Failed to list subscriptions")
 
 		for _, sub := range subResp.Value {
-			fmt.Println(*sub.DisplayName, *sub.SubscriptionID)
+			rgClient, err := armresources.NewResourceGroupsClient(*sub.SubscriptionID, cred, nil)
+			checkError(err, "Failed to create resource group client")
+
+			rgPager := rgClient.NewListPager(nil)
+			for rgPager.More() {
+				rgResp, err := rgPager.NextPage(ctx)
+				checkError(err, "Failed to list resource groups")
+
+				for _, rg := range rgResp.Value {
+					fmt.Printf("%s | %s (%s)\n", *sub.DisplayName, *rg.Name, *rg.Location)
+				}
+			}
 		}
 	}
 }

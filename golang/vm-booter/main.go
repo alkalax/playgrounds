@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
 
@@ -31,16 +31,16 @@ func main() {
 		checkError(err, "Failed to list subscriptions")
 
 		for _, sub := range subResp.Value {
-			rgClient, err := armresources.NewResourceGroupsClient(*sub.SubscriptionID, cred, nil)
-			checkError(err, "Failed to create resource group client")
+			vmClient, err := armcompute.NewVirtualMachinesClient(*sub.SubscriptionID, cred, nil)
+			checkError(err, "Failed to create virtual machines client")
 
-			rgPager := rgClient.NewListPager(nil)
-			for rgPager.More() {
-				rgResp, err := rgPager.NextPage(ctx)
-				checkError(err, "Failed to list resource groups")
+			vmPager := vmClient.NewListAllPager(nil)
+			for vmPager.More() {
+				vmResp, err := vmPager.NextPage(ctx)
+				checkError(err, "Failed to list virtual machines")
 
-				for _, rg := range rgResp.Value {
-					fmt.Printf("%s | %s (%s)\n", *sub.DisplayName, *rg.Name, *rg.Location)
+				for _, vm := range vmResp.Value {
+					fmt.Println(*vm.Name)
 				}
 			}
 		}

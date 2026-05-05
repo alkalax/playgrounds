@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -12,11 +14,13 @@ import (
 )
 
 type VirtualMachineInfo struct {
-	SubscriptionId string
-	ResourceGroup  string
+	SubscriptionId string `json:"subscription_id"`
+	ResourceGroup  string `json:"resource_group"`
 }
 
 var vmInfo map[string]VirtualMachineInfo
+
+const vmInfoFile = "vm_info.json"
 
 func checkError(error error, message string) {
 	if error != nil {
@@ -25,37 +29,85 @@ func checkError(error error, message string) {
 	}
 }
 
-func init() {
-	vmInfo = map[string]VirtualMachineInfo{}
+func loadVirtualMachineInfo() error {
+	_, err := os.Stat(vmInfoFile)
+	if errors.Is(err, os.ErrNotExist) {
+		err = generateVirtualMachineInfo()
+		if err != nil {
+			return err
+		}
+
+		err = saveVirtualMachineInfo()
+		if err != nil {
+			return err
+		}
+	} else {
+		data, err := os.ReadFile(vmInfoFile)
+		if err != nil {
+			return err
+		}
+
+		if err = json.Unmarshal(data, &vmInfo); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func main() {
+func saveVirtualMachineInfo() error {
+	data, err := json.MarshalIndent(vmInfo, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(vmInfoFile, data, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func generateVirtualMachineInfo() error {
+	vmInfo = map[string]VirtualMachineInfo{}
+
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
-	checkError(err, "Failed to create Azure credential")
+	if err != nil {
+		return err
+	}
 
 	subClient, err := armsubscriptions.NewClient(cred, nil)
-	checkError(err, "Failed to create Azure subscription client")
+	if err != nil {
+		return err
+	}
 
 	subPager := subClient.NewListPager(nil)
 	ctx := context.Background()
 	for subPager.More() {
 		subResp, err := subPager.NextPage(ctx)
-		checkError(err, "Failed to list subscriptions")
+		if err != nil {
+			return err
+		}
 
 		for _, sub := range subResp.Value {
 			vmClient, err := armcompute.NewVirtualMachinesClient(*sub.SubscriptionID, cred, nil)
-			checkError(err, "Failed to create virtual machines client")
+			if err != nil {
+				return err
+			}
 
 			vmPager := vmClient.NewListAllPager(nil)
 			for vmPager.More() {
 				vmResp, err := vmPager.NextPage(ctx)
-				checkError(err, "Failed to list virtual machines")
+				if err != nil {
+					return err
+				}
 
 				for _, vm := range vmResp.Value {
-					fmt.Println(*vm.Name)
-
 					parsedId, err := arm.ParseResourceID(*vm.ID)
-					checkError(err, "Failed to parse virtual machine ID")
+					if err != nil {
+						return err
+					}
 
 					vmInfo[*vm.Name] = VirtualMachineInfo{
 						SubscriptionId: *sub.SubscriptionID,
@@ -64,6 +116,16 @@ func main() {
 				}
 			}
 		}
+	}
+
+	return nil
+}
+
+func main() {
+	err := loadVirtualMachineInfo()
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 
 	fmt.Println(vmInfo)

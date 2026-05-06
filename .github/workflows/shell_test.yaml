@@ -1,0 +1,44 @@
+name: Shell Test
+on:
+  workflow_dispatch: {}
+
+jobs:
+  shell-test:
+    runs-on: [ self-hosted ]
+
+    steps:
+      - name: Python
+        shell: python
+        run: |
+          import platform
+          print(f"Running on {platform.system()}")
+
+      - name: Node
+        shell: node {0}
+        run: |
+          console.log("Current directory:", process.cwd())
+
+      - name: Warning
+        shell: bash
+        run: |
+          echo "::warning::Some warning here"
+      
+      - name: Error
+        shell: bash
+        run: |
+          echo "::error::Some error here"
+
+      - name: Debug
+        shell: bash
+        run: |
+          echo "::debug::Some debug info here"
+
+      - name: Log Groups
+        shell: bash
+        run: |
+          echo "::group::Listing dir contents..."
+          for item in $(ls)
+          do
+            echo "$item"
+          done
+          echo "::endgroup::"

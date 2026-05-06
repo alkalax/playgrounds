@@ -32,7 +32,15 @@ jobs:
 
       - name: Debug
         shell: bash
-        env:
-          ACTIONS_STEP_DEBUG: true
         run: |
           echo "::debug::Some debug info here"
+
+      - name: Log Groups
+        shell: bash
+        run: |
+          echo "::group::Listing dir contents..."
+          for item in $(ls)
+          do
+            echo "$item"
+          done
+          echo "::endgroup::"

@@ -1,0 +1,16 @@
+name: Shell Test
+on:
+  push:
+    branches:
+      - feature/workflow-shell-test
+
+jobs:
+  shell-test:
+    runs-on: [ self-hosted ]
+
+    steps:
+      - name: Python
+        shell: python
+        run: |
+          import platform
+          print(f"Running on {platform.system()}")

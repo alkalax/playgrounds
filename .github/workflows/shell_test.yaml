@@ -19,3 +19,18 @@ jobs:
         shell: node {0}
         run: |
           console.log("Current directory:", process.cwd())
+
+      - name: Warning
+        shell: bash
+        run: |
+          echo "::warning::Some warning here"
+      
+      - name: Error
+        shell: bash
+        run: |
+          echo "::error::Some error here"
+
+      - name: Debug
+        shell: bash
+        run: |
+          echo "::debug::Some debug info here"

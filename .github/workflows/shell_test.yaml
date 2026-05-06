@@ -14,3 +14,8 @@ jobs:
         run: |
           import platform
           print(f"Running on {platform.system()}")
+
+      - name: Node
+        shell: node {0}
+        run: |
+          console.log("Current directory:", process.cwd())

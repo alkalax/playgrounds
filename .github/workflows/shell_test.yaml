@@ -1,8 +1,6 @@
 name: Shell Test
 on:
-  push:
-    branches:
-      - feature/workflow-shell-test
+  workflow_dispatch: {}
 
 jobs:
   shell-test:

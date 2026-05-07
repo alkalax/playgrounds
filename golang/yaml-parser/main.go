@@ -52,15 +52,15 @@ func ConvertRSDToEUR(amount int, exchangeRate float64) int {
 	return int(float64(amount) / exchangeRate)
 }
 
-func (report *AccountReport) GetTotalTransactionsCurrency(currency string) (int, int) {
-	income := 0
-	expenses := 0
+func (report *AccountReport) GetTotalTransactionsCurrency(currency string) (Money, Money) {
+	income := Money{Currency: currency}
+	expenses := Money{Currency: currency}
 	for _, transaction := range report.Transactions {
 		if transaction.Value.Currency == currency {
 			if transaction.Value.Amount < 0 {
-				expenses += -transaction.Value.Amount
+				expenses.Amount += -transaction.Value.Amount
 			} else {
-				income += transaction.Value.Amount
+				income.Amount += transaction.Value.Amount
 			}
 		}
 	}
@@ -94,8 +94,8 @@ func main() {
 	fmt.Printf("Total: %d RSD (%d EUR)\n", totalRSD, totalEUR)
 
 	incomeRSD, expensesRSD := balance.Reports[0].GetTotalTransactionsCurrency("RSD")
-	fmt.Printf("Transactions in RSD:\nIncome: %d RSD\nExpenses: %d RSD\n", incomeRSD, expensesRSD)
+	fmt.Printf("Transactions in RSD:\nIncome: %d RSD\nExpenses: %d RSD\n", incomeRSD.Amount, expensesRSD.Amount)
 
 	incomeEUR, expensesEUR := balance.Reports[0].GetTotalTransactionsCurrency("EUR")
-	fmt.Printf("Transactions in EUR:\nIncome: %d EUR\nExpenses: %d EUR\n", incomeEUR, expensesEUR)
+	fmt.Printf("Transactions in EUR:\nIncome: %d EUR\nExpenses: %d EUR\n", incomeEUR.Amount, expensesEUR.Amount)
 }

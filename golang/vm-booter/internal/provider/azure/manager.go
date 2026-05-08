@@ -1,4 +1,4 @@
-package main
+package azure
 
 import (
 	"context"
@@ -11,43 +11,46 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
+
+	"alkalax/vm-booter/internal/provider"
 )
 
-type VirtualMachineInfo struct {
+type AzureVirtualMachineManager struct {
+	cacheFile          string
+	virtualMachineInfo map[string]AzureVirtualMachineInfo
+}
+
+type AzureVirtualMachineInfo struct {
 	SubscriptionId string `json:"subscription_id"`
 	ResourceGroup  string `json:"resource_group"`
 }
 
-var vmInfo map[string]VirtualMachineInfo
-
-const vmInfoFile = "vm_info.json"
-
-func checkError(error error, message string) {
-	if error != nil {
-		fmt.Printf("%s: %v\n", message, error)
-		os.Exit(1)
+func NewVirtualMachineManager(cacheFile string) provider.VirtualMachineManager {
+	return &AzureVirtualMachineManager{
+		cacheFile:          cacheFile,
+		virtualMachineInfo: map[string]AzureVirtualMachineInfo{},
 	}
 }
 
-func loadVirtualMachineInfo() error {
-	_, err := os.Stat(vmInfoFile)
+func (manager *AzureVirtualMachineManager) loadVirtualMachineInfo() error {
+	_, err := os.Stat(manager.cacheFile)
 	if errors.Is(err, os.ErrNotExist) {
-		err = generateVirtualMachineInfo()
+		err = manager.generateVirtualMachineInfo()
 		if err != nil {
 			return err
 		}
 
-		err = saveVirtualMachineInfo()
+		err = manager.saveVirtualMachineInfo()
 		if err != nil {
 			return err
 		}
 	} else {
-		data, err := os.ReadFile(vmInfoFile)
+		data, err := os.ReadFile(manager.cacheFile)
 		if err != nil {
 			return err
 		}
 
-		if err = json.Unmarshal(data, &vmInfo); err != nil {
+		if err = json.Unmarshal(data, &manager.virtualMachineInfo); err != nil {
 			return err
 		}
 	}
@@ -55,13 +58,13 @@ func loadVirtualMachineInfo() error {
 	return nil
 }
 
-func saveVirtualMachineInfo() error {
-	data, err := json.MarshalIndent(vmInfo, "", "  ")
+func (manager *AzureVirtualMachineManager) saveVirtualMachineInfo() error {
+	data, err := json.MarshalIndent(manager.virtualMachineInfo, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(vmInfoFile, data, 0644)
+	err = os.WriteFile(manager.cacheFile, data, 0644)
 	if err != nil {
 		return err
 	}
@@ -69,9 +72,7 @@ func saveVirtualMachineInfo() error {
 	return nil
 }
 
-func generateVirtualMachineInfo() error {
-	vmInfo = map[string]VirtualMachineInfo{}
-
+func (manager *AzureVirtualMachineManager) generateVirtualMachineInfo() error {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return err
@@ -109,7 +110,7 @@ func generateVirtualMachineInfo() error {
 						return err
 					}
 
-					vmInfo[*vm.Name] = VirtualMachineInfo{
+					manager.virtualMachineInfo[*vm.Name] = AzureVirtualMachineInfo{
 						SubscriptionId: *sub.SubscriptionID,
 						ResourceGroup:  parsedId.ResourceGroupName,
 					}
@@ -121,15 +122,15 @@ func generateVirtualMachineInfo() error {
 	return nil
 }
 
-func startStopVirtualMachine(name string, start bool) error {
-	vm, found := vmInfo[name]
+func (manager *AzureVirtualMachineManager) StartStopVirtualMachine(name string, start bool) error {
+	vm, found := manager.virtualMachineInfo[name]
 	if !found {
-		err := loadVirtualMachineInfo()
+		err := manager.loadVirtualMachineInfo()
 		if err != nil {
 			return err
 		}
 
-		vm, found = vmInfo[name]
+		vm, found = manager.virtualMachineInfo[name]
 		if !found {
 			return fmt.Errorf("virtual machine '%s' not found", name)
 		}
@@ -167,12 +168,4 @@ func startStopVirtualMachine(name string, start bool) error {
 	}
 
 	return nil
-}
-
-func main() {
-	err := startStopVirtualMachine("ubuntu-0", false)
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
 }

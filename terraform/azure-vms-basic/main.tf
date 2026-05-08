@@ -10,6 +10,11 @@ terraform {
 provider "azurerm" {
   features {}
   resource_provider_registrations = "none"
+  subscription_id = var.subscription_id
+}
+
+variable "subscription_id" {
+  type = string
 }
 
 variable "resource_group_name" {

@@ -121,12 +121,58 @@ func generateVirtualMachineInfo() error {
 	return nil
 }
 
+func startStopVirtualMachine(name string, start bool) error {
+	vm, found := vmInfo[name]
+	if !found {
+		err := loadVirtualMachineInfo()
+		if err != nil {
+			return err
+		}
+
+		vm, found = vmInfo[name]
+		if !found {
+			return fmt.Errorf("virtual machine '%s' not found", name)
+		}
+	}
+
+	cred, _ := azidentity.NewDefaultAzureCredential(nil)
+	clientFactory, err := armcompute.NewClientFactory(vm.SubscriptionId, cred, nil)
+	if err != nil {
+		return err
+	}
+
+	client := clientFactory.NewVirtualMachinesClient()
+
+	ctx := context.Background()
+	if start {
+		poller, err := client.BeginStart(ctx, vm.ResourceGroup, name, nil)
+		if err != nil {
+			return err
+		}
+
+		_, err = poller.PollUntilDone(ctx, nil)
+		if err != nil {
+			return err
+		}
+	} else {
+		poller, err := client.BeginDeallocate(ctx, vm.ResourceGroup, name, nil)
+		if err != nil {
+			return err
+		}
+
+		_, err = poller.PollUntilDone(ctx, nil)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func main() {
-	err := loadVirtualMachineInfo()
+	err := startStopVirtualMachine("ubuntu-0", false)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-
-	fmt.Println(vmInfo)
 }

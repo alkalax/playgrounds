@@ -1,0 +1,10 @@
+{
+  "ubuntu-0": {
+    "subscription_id": "a2b28c85-1948-4263-90ca-bade2bac4df4",
+    "resource_group": "KML_RG_MAIN-9C3B44405AAB4374"
+  },
+  "ubuntu-1": {
+    "subscription_id": "a2b28c85-1948-4263-90ca-bade2bac4df4",
+    "resource_group": "KML_RG_MAIN-9C3B44405AAB4374"
+  }
+}

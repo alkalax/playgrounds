@@ -15,11 +15,17 @@ import (
 	"alkalax/vm-booter/internal/provider"
 )
 
-func NewVirtualMachineManager(cacheFile string) provider.VirtualMachineManager {
+func NewVirtualMachineManager(cacheFile string) (provider.VirtualMachineManager, error) {
+	credential, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		return nil, err
+	}
+
 	return &AzureVirtualMachineManager{
+		credential:         credential,
 		cacheFile:          cacheFile,
 		virtualMachineInfo: map[string]AzureVirtualMachineInfo{},
-	}
+	}, nil
 }
 
 func (manager *AzureVirtualMachineManager) loadVirtualMachineInfo() error {
@@ -63,12 +69,7 @@ func (manager *AzureVirtualMachineManager) saveVirtualMachineInfo() error {
 }
 
 func (manager *AzureVirtualMachineManager) generateVirtualMachineInfo() error {
-	cred, err := azidentity.NewDefaultAzureCredential(nil)
-	if err != nil {
-		return err
-	}
-
-	subClient, err := armsubscriptions.NewClient(cred, nil)
+	subClient, err := armsubscriptions.NewClient(manager.credential, nil)
 	if err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ func (manager *AzureVirtualMachineManager) generateVirtualMachineInfo() error {
 		}
 
 		for _, sub := range subResp.Value {
-			vmClient, err := armcompute.NewVirtualMachinesClient(*sub.SubscriptionID, cred, nil)
+			vmClient, err := armcompute.NewVirtualMachinesClient(*sub.SubscriptionID, manager.credential, nil)
 			if err != nil {
 				return err
 			}
@@ -126,8 +127,7 @@ func (manager *AzureVirtualMachineManager) StartStopVirtualMachine(name string, 
 		}
 	}
 
-	cred, _ := azidentity.NewDefaultAzureCredential(nil)
-	clientFactory, err := armcompute.NewClientFactory(vm.SubscriptionId, cred, nil)
+	clientFactory, err := armcompute.NewClientFactory(vm.SubscriptionId, manager.credential, nil)
 	if err != nil {
 		return err
 	}

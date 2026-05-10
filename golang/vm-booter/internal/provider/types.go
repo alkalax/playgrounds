@@ -1,5 +1,5 @@
 package provider
 
 type VirtualMachineManager interface {
-	StartStopVirtualMachine(name string, start bool) error
+	StartStopVirtualMachine(name string, start, wait bool) error
 }

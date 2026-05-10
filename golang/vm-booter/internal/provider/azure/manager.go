@@ -113,7 +113,7 @@ func (manager *AzureVirtualMachineManager) generateVirtualMachineInfo() error {
 	return nil
 }
 
-func (manager *AzureVirtualMachineManager) StartStopVirtualMachine(name string, start bool) error {
+func (manager *AzureVirtualMachineManager) StartStopVirtualMachine(name string, start, wait bool) error {
 	vm, found := manager.virtualMachineInfo[name]
 	if !found {
 		err := manager.loadVirtualMachineInfo()
@@ -141,7 +141,11 @@ func (manager *AzureVirtualMachineManager) StartStopVirtualMachine(name string, 
 			return err
 		}
 
-		_, err = poller.PollUntilDone(ctx, nil)
+		if wait {
+			_, err = poller.PollUntilDone(ctx, nil)
+		} else {
+			_, err = poller.Poll(ctx)
+		}
 		if err != nil {
 			return err
 		}

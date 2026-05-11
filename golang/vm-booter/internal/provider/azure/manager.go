@@ -28,7 +28,11 @@ func NewVirtualMachineManager(cacheFile string) (provider.VirtualMachineManager,
 	}, nil
 }
 
-func (manager *AzureVirtualMachineManager) loadVirtualMachineInfo() error {
+func (manager *AzureVirtualMachineManager) loadVirtualMachineInfo(noCache bool) error {
+	if noCache {
+		return manager.generateVirtualMachineInfo()
+	}
+
 	_, err := os.Stat(manager.cacheFile)
 	if errors.Is(err, os.ErrNotExist) {
 		err = manager.generateVirtualMachineInfo()
@@ -69,6 +73,8 @@ func (manager *AzureVirtualMachineManager) saveVirtualMachineInfo() error {
 }
 
 func (manager *AzureVirtualMachineManager) generateVirtualMachineInfo() error {
+	manager.virtualMachineInfo = map[string]AzureVirtualMachineInfo{}
+
 	subClient, err := armsubscriptions.NewClient(manager.credential, nil)
 	if err != nil {
 		return err
@@ -113,10 +119,10 @@ func (manager *AzureVirtualMachineManager) generateVirtualMachineInfo() error {
 	return nil
 }
 
-func (manager *AzureVirtualMachineManager) StartStopVirtualMachine(name string, start, wait bool) error {
+func (manager *AzureVirtualMachineManager) StartStopVirtualMachine(name string, start, wait, noCache bool) error {
 	vm, found := manager.virtualMachineInfo[name]
 	if !found {
-		err := manager.loadVirtualMachineInfo()
+		err := manager.loadVirtualMachineInfo(noCache)
 		if err != nil {
 			return err
 		}

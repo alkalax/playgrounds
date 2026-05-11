@@ -11,9 +11,11 @@ import (
 func main() {
 	startCmd := flag.NewFlagSet("start", flag.ExitOnError)
 	startCmdWait := startCmd.Bool("wait", false, "Wait for the start command to complete")
+	startCmdNoCache := startCmd.Bool("no-cache", false, "Search for machines without consulting cache file")
 
 	stopCmd := flag.NewFlagSet("stop", flag.ExitOnError)
 	stopCmdWait := stopCmd.Bool("wait", false, "Wait for the stop command to complete")
+	stopCmdNoCache := stopCmd.Bool("no-cache", false, "Search for machines without consulting cache file")
 
 	if len(os.Args) < 2 {
 		fmt.Println("error: expected subcommands")
@@ -37,7 +39,7 @@ func main() {
 		vmName := startCmd.Arg(0)
 		fmt.Printf("Starting VM: %s\n", vmName)
 
-		err = manager.StartStopVirtualMachine(vmName, true, *startCmdWait)
+		err = manager.StartStopVirtualMachine(vmName, true, *startCmdWait, *startCmdNoCache)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
@@ -54,7 +56,7 @@ func main() {
 		vmName := stopCmd.Arg(0)
 		fmt.Printf("Stopping VM: %s\n", vmName)
 
-		err = manager.StartStopVirtualMachine(vmName, false, *stopCmdWait)
+		err = manager.StartStopVirtualMachine(vmName, false, *stopCmdWait, *stopCmdNoCache)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)

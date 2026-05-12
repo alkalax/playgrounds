@@ -149,11 +149,9 @@ func (manager *AzureVirtualMachineManager) StartStopVirtualMachine(name string, 
 
 		if wait {
 			_, err = poller.PollUntilDone(ctx, nil)
-		} else {
-			_, err = poller.Poll(ctx)
-		}
-		if err != nil {
-			return err
+			if err != nil {
+				return err
+			}
 		}
 	} else {
 		poller, err := client.BeginDeallocate(ctx, vm.ResourceGroup, name, nil)
@@ -161,9 +159,11 @@ func (manager *AzureVirtualMachineManager) StartStopVirtualMachine(name string, 
 			return err
 		}
 
-		_, err = poller.PollUntilDone(ctx, nil)
-		if err != nil {
-			return err
+		if wait {
+			_, err = poller.PollUntilDone(ctx, nil)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

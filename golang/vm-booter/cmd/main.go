@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"alkalax/vm-booter/internal/provider/azure"
 )
@@ -36,16 +37,17 @@ func main() {
 			os.Exit(1)
 		}
 
-		vmName := startCmd.Arg(0)
-		fmt.Printf("Starting VM: %s\n", vmName)
+		vmNames := strings.Split(startCmd.Arg(0), ",")
+		for _, vmName := range vmNames {
+			fmt.Printf("Starting VM: %s\n", vmName)
 
-		err = manager.StartStopVirtualMachine(vmName, true, *startCmdWait, *startCmdNoCache)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
+			err = manager.StartStopVirtualMachine(vmName, true, *startCmdWait, *startCmdNoCache)
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
+			fmt.Println("Done.")
 		}
-
-		fmt.Println("Done.")
 	case "stop":
 		stopCmd.Parse(os.Args[2:])
 		if stopCmd.NArg() < 1 {
@@ -53,16 +55,17 @@ func main() {
 			os.Exit(1)
 		}
 
-		vmName := stopCmd.Arg(0)
-		fmt.Printf("Stopping VM: %s\n", vmName)
+		vmNames := strings.Split(stopCmd.Arg(0), ",")
+		for _, vmName := range vmNames {
+			fmt.Printf("Stopping VM: %s\n", vmName)
 
-		err = manager.StartStopVirtualMachine(vmName, false, *stopCmdWait, *stopCmdNoCache)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
+			err = manager.StartStopVirtualMachine(vmName, false, *stopCmdWait, *stopCmdNoCache)
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
+			fmt.Println("Done.")
 		}
-
-		fmt.Println("Done.")
 
 	default:
 		fmt.Println("error: unknown command")

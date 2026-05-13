@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -117,6 +118,41 @@ func (manager *AzureVirtualMachineManager) generateVirtualMachineInfo() error {
 	}
 
 	return nil
+}
+
+func (manager *AzureVirtualMachineManager) GetVirtualMachineState(name string) (string, error) {
+	vm, found := manager.virtualMachineInfo[name]
+	if !found {
+		err := manager.loadVirtualMachineInfo(false)
+		if err != nil {
+			return "", err
+		}
+
+		vm, found = manager.virtualMachineInfo[name]
+		if !found {
+			return "", fmt.Errorf("virtual machine '%s' not found", name)
+		}
+	}
+
+	clientFactory, err := armcompute.NewClientFactory(vm.SubscriptionId, manager.credential, nil)
+	if err != nil {
+		return "", err
+	}
+
+	client := clientFactory.NewVirtualMachinesClient()
+	ctx := context.Background()
+	resp, err := client.InstanceView(ctx, vm.ResourceGroup, name, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to retrieve instance view for '%s'", vm)
+	}
+
+	for _, status := range resp.Statuses {
+		if strings.HasPrefix(*status.Code, "PowerState") {
+			return strings.Split(*status.Code, "/")[1], nil
+		}
+	}
+
+	return "", fmt.Errorf("failed to get status for '%s'", vm)
 }
 
 func (manager *AzureVirtualMachineManager) StartStopVirtualMachine(name string, start, wait, noCache bool) error {

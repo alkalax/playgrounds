@@ -18,6 +18,8 @@ func main() {
 	stopCmdWait := stopCmd.Bool("wait", false, "Wait for the stop command to complete")
 	stopCmdNoCache := stopCmd.Bool("no-cache", false, "Search for machines without consulting cache file")
 
+	statusCmd := flag.NewFlagSet("status", flag.ExitOnError)
+
 	if len(os.Args) < 2 {
 		fmt.Println("error: expected subcommands")
 		os.Exit(1)
@@ -66,7 +68,23 @@ func main() {
 			}
 			fmt.Println("Done.")
 		}
+	case "status":
+		statusCmd.Parse(os.Args[2:])
+		if statusCmd.NArg() < 1 {
+			fmt.Println("error: virtual machine name is required")
+			os.Exit(1)
+		}
 
+		vmNames := strings.Split(statusCmd.Arg(0), ",")
+		for _, vmName := range vmNames {
+			state, err := manager.GetVirtualMachineState(vmName)
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
+
+			fmt.Printf("%s: %s\n", vmName, state)
+		}
 	default:
 		fmt.Println("error: unknown command")
 		os.Exit(1)

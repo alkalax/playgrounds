@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 
 	"alkalax/vm-booter/internal/provider"
@@ -114,6 +116,62 @@ func (manager *AzureVirtualMachineManager) generateVirtualMachineInfo() error {
 					}
 				}
 			}
+		}
+	}
+
+	return nil
+}
+
+func (manager *AzureVirtualMachineManager) GetActivityLogs(name string) error {
+	vm, found := manager.virtualMachineInfo[name]
+	if !found {
+		err := manager.loadVirtualMachineInfo(false)
+		if err != nil {
+			return err
+		}
+
+		vm, found = manager.virtualMachineInfo[name]
+		if !found {
+			return fmt.Errorf("virtual machine '%s' not found", name)
+		}
+	}
+
+	client, err := armmonitor.NewActivityLogsClient(vm.SubscriptionId, manager.credential, nil)
+	if err != nil {
+		return err
+	}
+
+	// Define the OData filter window (Must include start eventTimestamp)
+	startTime := time.Now().Add(-24 * time.Hour).Format(time.RFC3339) // Last 24 hours
+	endTime := time.Now().Format(time.RFC3339)
+
+	// Filter syntax requires explicitly formatting eventTimestamp
+	filter := fmt.Sprintf("eventTimestamp ge '%s' and eventTimestamp le '%s'", startTime, endTime)
+
+	// Fetch the pager
+	//options := &armmonitor.ActivityLogsClientListOptions{
+	//	Filter: &filter,
+	//	Select: nil, // Leave nil to pull all properties like Caller and OperationName
+	//}
+	pager := client.NewListPager(filter, nil)
+	for pager.More() {
+		page, err := pager.NextPage(context.Background())
+		if err != nil {
+			return fmt.Errorf("failed to get next page of logs: %v", err)
+		}
+
+		for _, event := range page.Value {
+			if !strings.HasPrefix(*event.OperationName.Value, "Microsoft.Compute/virtualMachines") {
+				continue
+			}
+			fmt.Println("=====================================================================")
+			fmt.Printf("Time: %s\n", *event.EventTimestamp)
+			fmt.Printf("Caller: %s\n", *event.Caller)
+			fmt.Printf("Description: %s\n", *event.Description)
+			fmt.Printf("Event name: %s\n", *event.EventName.Value)
+			fmt.Printf("Operation: %s\n", *event.OperationName.Value)
+			fmt.Printf("Status: %s\n", *event.Status.Value)
+			fmt.Println("=====================================================================")
 		}
 	}
 

@@ -20,6 +20,8 @@ func main() {
 
 	statusCmd := flag.NewFlagSet("status", flag.ExitOnError)
 
+	logsCmd := flag.NewFlagSet("logs", flag.ExitOnError)
+
 	if len(os.Args) < 2 {
 		fmt.Println("error: expected subcommands")
 		os.Exit(1)
@@ -85,6 +87,19 @@ func main() {
 
 			fmt.Printf("%s: %s\n", vmName, state)
 		}
+	case "logs":
+		logsCmd.Parse(os.Args[2:])
+		if logsCmd.NArg() < 1 {
+			fmt.Println("error: virtual machine name is required")
+			os.Exit(1)
+		}
+
+		err := manager.GetActivityLogs(logsCmd.Arg(0))
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+
 	default:
 		fmt.Println("error: unknown command")
 		os.Exit(1)

@@ -161,9 +161,11 @@ func (manager *AzureVirtualMachineManager) GetActivityLogs(name string) error {
 		}
 
 		for _, event := range page.Value {
-			if !strings.HasPrefix(*event.OperationName.Value, "Microsoft.Compute/virtualMachines") {
+			operationComps := strings.Split(*event.OperationName.Value, "/")
+			if operationComps[1] != "virtualMachines" || *event.Status.Value != "Started" {
 				continue
 			}
+
 			fmt.Println("=====================================================================")
 			fmt.Printf("Time: %s\n", *event.EventTimestamp)
 			fmt.Printf("Caller: %s\n", *event.Caller)

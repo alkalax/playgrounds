@@ -122,18 +122,27 @@ func (manager *AzureVirtualMachineManager) generateVirtualMachineInfo() error {
 	return nil
 }
 
-func (manager *AzureVirtualMachineManager) GetActivityLogs(name string) error {
+func (manager *AzureVirtualMachineManager) getVirtualMachine(name string) (AzureVirtualMachineInfo, error) {
 	vm, found := manager.virtualMachineInfo[name]
 	if !found {
 		err := manager.loadVirtualMachineInfo(false)
 		if err != nil {
-			return err
+			return vm, err
 		}
 
 		vm, found = manager.virtualMachineInfo[name]
 		if !found {
-			return fmt.Errorf("virtual machine '%s' not found", name)
+			return vm, fmt.Errorf("virtual machine '%s' not found", name)
 		}
+	}
+
+	return vm, nil
+}
+
+func (manager *AzureVirtualMachineManager) GetActivityLogs(name string) error {
+	vm, err := manager.getVirtualMachine(name)
+	if err != nil {
+		return err
 	}
 
 	client, err := armmonitor.NewActivityLogsClient(vm.SubscriptionId, manager.credential, nil)
@@ -181,17 +190,9 @@ func (manager *AzureVirtualMachineManager) GetActivityLogs(name string) error {
 }
 
 func (manager *AzureVirtualMachineManager) GetVirtualMachineState(name string) (string, error) {
-	vm, found := manager.virtualMachineInfo[name]
-	if !found {
-		err := manager.loadVirtualMachineInfo(false)
-		if err != nil {
-			return "", err
-		}
-
-		vm, found = manager.virtualMachineInfo[name]
-		if !found {
-			return "", fmt.Errorf("virtual machine '%s' not found", name)
-		}
+	vm, err := manager.getVirtualMachine(name)
+	if err != nil {
+		return "", err
 	}
 
 	clientFactory, err := armcompute.NewClientFactory(vm.SubscriptionId, manager.credential, nil)
@@ -216,17 +217,9 @@ func (manager *AzureVirtualMachineManager) GetVirtualMachineState(name string) (
 }
 
 func (manager *AzureVirtualMachineManager) StartStopVirtualMachine(name string, start, wait, noCache bool) error {
-	vm, found := manager.virtualMachineInfo[name]
-	if !found {
-		err := manager.loadVirtualMachineInfo(noCache)
-		if err != nil {
-			return err
-		}
-
-		vm, found = manager.virtualMachineInfo[name]
-		if !found {
-			return fmt.Errorf("virtual machine '%s' not found", name)
-		}
+	vm, err := manager.getVirtualMachine(name)
+	if err != nil {
+		return err
 	}
 
 	clientFactory, err := armcompute.NewClientFactory(vm.SubscriptionId, manager.credential, nil)

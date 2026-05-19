@@ -51,13 +51,13 @@ def get_virtual_machine_status(vm_name, credential):
     
     return "unknown"
 
-def fetch_activity_logs(vm_name, credential):
+def fetch_activity_logs(vm_name, days=1, credential=None):
     monitor_client = MonitorManagementClient(
         credential=credential, 
         subscription_id=virtual_machines[vm_name]["subscription_id"]
     )
 
-    start = datetime.now() - timedelta(hours=24)
+    start = datetime.now() - timedelta(days=days)
     end = datetime.now()
     filter_str = (
         f"resourceId eq '{virtual_machines[vm_name]['resource_id']}' and "

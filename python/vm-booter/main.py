@@ -2,7 +2,7 @@ from azure.identity import DefaultAzureCredential
 from azure.mgmt.resource.subscriptions import SubscriptionClient
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.monitor import MonitorManagementClient
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 virtual_machines = {}
 actions = [
@@ -68,7 +68,7 @@ def fetch_activity_logs(vm_name, days=1, credential=None):
 
     return map(
         lambda e: {
-            "timestamp": e.event_timestamp,
+            "timestamp": e.event_timestamp.astimezone(timezone.utc).replace(tzinfo=None),
             "action": e.operation_name.value.split("/")[-2] if e.operation_name and e.operation_name.value else None
         },
         filter(
@@ -76,6 +76,20 @@ def fetch_activity_logs(vm_name, days=1, credential=None):
             events
         )
     )
+
+def get_uptime(vm_name, credential):
+    if not credential:
+        credential = DefaultAzureCredential()
+
+    if virtual_machines[vm_name]["status"] == "deallocated":
+        return 0
+    
+    days = 28
+    for event in fetch_activity_logs(vm_name=vm_name, days=days, credential=credential):
+        if event["action"] == "start":
+            return round((datetime.now() - event["timestamp"]).total_seconds() / 86400, 2)
+
+    return days
 
 if __name__ == "__main__":
     credential = DefaultAzureCredential()
@@ -87,3 +101,5 @@ if __name__ == "__main__":
 
     for vm_name, vm_info in virtual_machines.items():
         print(f"VM Name: {vm_name}, Status: {vm_info.get('status')}")
+
+    print(f"Uptime for 'ubuntu-0': {get_uptime('ubuntu-0', credential=credential)} days")

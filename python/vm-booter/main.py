@@ -10,7 +10,7 @@ actions = [
     'Microsoft.Compute/virtualMachines/deallocate/action'
 ]
 
-def load_virtual_machines(credential):
+def load_virtual_machines(credential, check_status=False):
 
     sub_client = SubscriptionClient(credential=credential)
 
@@ -28,6 +28,28 @@ def load_virtual_machines(credential):
                 }
         except Exception as e:
             print(f"Failed to read compute resources: {e}")
+
+    if check_status:
+        for vm_name, _ in virtual_machines.items():
+            virtual_machines[vm_name]["status"] = get_virtual_machine_status(vm_name, credential)
+
+def get_virtual_machine_status(vm_name, credential):
+    if vm_name not in virtual_machines:
+        print(f"VM '{vm_name}' not found.")
+        return None
+
+    compute_client = ComputeManagementClient(
+        credential=credential, 
+        subscription_id=virtual_machines[vm_name]["subscription_id"]
+    )
+    resource_group = virtual_machines[vm_name]["resource_group"]
+    vm_status = compute_client.virtual_machines.get(resource_group, vm_name, expand='instanceView')
+    
+    for status in vm_status.instance_view.statuses:
+        if status.code.startswith('PowerState/'):
+            return status.code.split('/')[1]
+    
+    return "unknown"
 
 def fetch_activity_logs(vm_name, credential):
     monitor_client = MonitorManagementClient(
@@ -57,6 +79,9 @@ def fetch_activity_logs(vm_name, credential):
 
 if __name__ == "__main__":
     credential = DefaultAzureCredential()
-    load_virtual_machines(credential=credential)
+    load_virtual_machines(credential=credential, check_status=True)
 
     fetch_activity_logs(vm_name="ubuntu-0", credential=credential)
+
+    for vm_name, vm_info in virtual_machines.items():
+        print(f"VM Name: {vm_name}, Status: {vm_info.get('status')}")

@@ -66,22 +66,24 @@ def fetch_activity_logs(vm_name, credential):
     )
     events = monitor_client.activity_logs.list(filter=filter_str)
 
-    for event in events:
-        if (
-            event.operation_name 
-            and event.operation_name.value in actions
-            and event.status.value == "Succeeded"
-        ):
-            print(f"Time: {event.event_timestamp}")
-            print(f"Event: {event.operation_name.value}")
-            print(f"Event: {event.operation_name.localized_value}")
-            print(f"Status: {event.status.value}")
+    return map(
+        lambda e: {
+            "timestamp": e.event_timestamp,
+            "action": e.operation_name.value.split("/")[-2] if e.operation_name and e.operation_name.value else None
+        },
+        filter(
+            lambda e: e.operation_name and e.operation_name.value in actions and e.status.value == "Succeeded",
+            events
+        )
+    )
 
 if __name__ == "__main__":
     credential = DefaultAzureCredential()
     load_virtual_machines(credential=credential, check_status=True)
 
-    fetch_activity_logs(vm_name="ubuntu-0", credential=credential)
+    events = fetch_activity_logs(vm_name="ubuntu-0", credential=credential)
+    for event in events:
+        print(event)
 
     for vm_name, vm_info in virtual_machines.items():
         print(f"VM Name: {vm_name}, Status: {vm_info.get('status')}")

@@ -1,0 +1,11 @@
+{{define "dropdown"}}
+<form method="get" action="/" class="inline-block w-full text-left">
+<select id="vm-select" name="vm" class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm text-center focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm">
+    <option value="">- Select VM -</option>
+    {{range .VMs}}
+    <option value="{{.Name}}" {{if eq $.SelectedName .Name}}selected{{end}}>{{.Name}}</option>
+    {{end}}
+</select>
+<button type="submit" class="mt-4 mx-auto block rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Show shutdown time</button>
+</form>
+{{end}}

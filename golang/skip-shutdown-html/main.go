@@ -43,6 +43,7 @@ func main() {
 
 	tpl := template.Must(template.ParseFiles(
 		"templates/base.html",
+		"templates/partials/dropdown.html",
 	))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

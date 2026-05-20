@@ -9,21 +9,14 @@
   <body class="bg-gray-100 p-10">
     <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow text-center">
       <h1 class="text-xl font-bold mb-4">VM shutdown settings</h1>
-      <form method="get" action="/" class="inline-block w-full text-left">
-        <select id="vm-select" name="vm" class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm text-center focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm">
-          <option value="">- Select VM -</option>
-          {{range .VMs}}
-          <option value="{{.Name}}" {{if eq $.SelectedName .Name}}selected{{end}}>{{.Name}}</option>
-          {{end}}
-        </select>
-        <button type="submit" class="mt-4 mx-auto block rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Show shutdown time</button>
-      </form>
+      {{template "dropdown" .}}
+
       <div id="vm-details" class="mt-6 text-left bg-slate-50 rounded-lg p-4">
         {{with .Selected}}
         <div class="grid grid-cols-2 gap-x-4 gap-y-2 items-center text-sm text-gray-700">
           <span class="font-medium text-gray-600">Name</span>
           <span class="text-right font-semibold text-gray-900">{{.Name}}</span>
-          <span class="font-medium text-gray-600">Next shutdown</span>
+          <span class="font-medium text-gray-600">Next Shutdown</span>
           <span class="text-right text-gray-900">{{if .SkipToday}}Tomorrow{{else}}Today{{end}} at {{.ShutdownTime.Format "15:04"}} CET</span>
         </div>
         {{else}}

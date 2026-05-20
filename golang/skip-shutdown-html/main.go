@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 )
@@ -57,6 +58,26 @@ func main() {
 		}
 
 		tpl.ExecuteTemplate(w, "base", pageData)
+	})
+
+	http.HandleFunc("/skip", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
+
+		if err := r.ParseForm(); err != nil {
+			log.Printf("failed to parse form: %v", err)
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
+
+		selectedName := r.FormValue("vm")
+		if vm := findVM(selectedName); vm != nil {
+			vm.SkipToday = true
+		}
+
+		http.Redirect(w, r, "/?vm="+url.QueryEscape(selectedName), http.StatusSeeOther)
 	})
 
 	log.Printf("Server is running on port %s", port)

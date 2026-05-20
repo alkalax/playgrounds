@@ -19,10 +19,18 @@
           <span class="font-medium text-gray-600">Next Shutdown</span>
           <span class="text-right text-gray-900">{{if .SkipToday}}Tomorrow{{else}}Today{{end}} at {{.ShutdownTime.Format "15:04"}} CET</span>
         </div>
+        {{if not .SkipToday}}
+        <form method="post" action="/skip" class="mt-4 text-center">
+          <input type="hidden" name="vm" value="{{.Name}}">
+          <button type="submit" class="mx-auto block rounded-md border border-transparent bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2">Skip today?</button>
+        </form>
+        {{else}}
+        <p class="mt-4 text-sm text-green-700 font-medium">This VM is already skipped for today.</p>
+        {{end}}
         {{else}}
         <p class="text-sm text-gray-600">Choose a VM from the menu above to see its shutdown time.</p>
         {{end}}
-      </div>
+      </div>    
     </div>
   </body>
 </html>

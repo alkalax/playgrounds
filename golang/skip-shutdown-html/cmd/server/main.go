@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -42,9 +43,22 @@ func main() {
 		port = "8080"
 	}
 
+	templateDir := os.Getenv("TEMPLATE_DIR")
+	if templateDir == "" {
+		ex, err := os.Executable()
+		if err != nil {
+			log.Fatalf("failed to get executable path: %v", err)
+		}
+		templateDir = filepath.Join(filepath.Dir(ex), "templates")
+	}
+
+	if _, err := os.Stat(templateDir); os.IsNotExist(err) {
+		log.Fatalf("template directory %s does not exist", templateDir)
+	}
+
 	tpl := template.Must(template.ParseFiles(
-		"templates/base.html",
-		"templates/partials/dropdown.html",
+		filepath.Join(templateDir, "base.html"),
+		filepath.Join(templateDir, "partials/dropdown.html"),
 	))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

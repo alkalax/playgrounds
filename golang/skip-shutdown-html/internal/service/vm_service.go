@@ -19,3 +19,7 @@ func FindVM(name string) *models.VirtualMachineInfo {
 	}
 	return nil
 }
+
+func GetVMs() []models.VirtualMachineInfo {
+	return vms
+}

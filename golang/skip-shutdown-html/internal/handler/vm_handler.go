@@ -7,14 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"time"
 )
-
-var vms = []models.VirtualMachineInfo{
-	{Name: "VM1", ShutdownTime: time.Date(2024, 6, 30, 22, 0, 0, 0, time.UTC), SkipToday: false},
-	{Name: "VM2", ShutdownTime: time.Date(2024, 6, 30, 22, 0, 0, 0, time.UTC), SkipToday: true},
-	{Name: "VM3", ShutdownTime: time.Date(2024, 6, 30, 22, 0, 0, 0, time.UTC), SkipToday: false},
-}
 
 type VMHandler struct {
 	tpl *template.Template
@@ -29,7 +22,7 @@ func (h *VMHandler) GetVM(w http.ResponseWriter, r *http.Request) {
 
 	selectedName := r.URL.Query().Get("vm")
 	pageData := models.PageData{
-		VMs:          vms,
+		VMs:          service.GetVMs(),
 		SelectedName: selectedName,
 		Selected:     service.FindVM(selectedName),
 	}

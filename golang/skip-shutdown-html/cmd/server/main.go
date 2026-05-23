@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"alkalax/skip-shutdown-html/internal/handler"
+	"alkalax/skip-shutdown-html/internal/storage"
 )
 
 func main() {
@@ -34,7 +35,7 @@ func main() {
 		filepath.Join(templateDir, "partials/dropdown.html"),
 	))
 
-	vmHandler := handler.NewVMHandler(tpl)
+	vmHandler := handler.NewVMHandler(tpl, storage.NewMockVMRepository())
 
 	http.HandleFunc("/", vmHandler.GetVM)
 	http.HandleFunc("/skip", vmHandler.PostSkipShutdown)

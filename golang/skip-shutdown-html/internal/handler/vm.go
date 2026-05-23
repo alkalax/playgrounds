@@ -2,19 +2,27 @@ package handler
 
 import (
 	"alkalax/skip-shutdown-html/internal/models"
-	"alkalax/skip-shutdown-html/internal/service"
 	"html/template"
 	"log"
 	"net/http"
 	"net/url"
 )
 
-type VMHandler struct {
-	tpl *template.Template
+type VMRepository interface {
+	GetVMs() []models.VirtualMachineInfo
+	FindVM(name string) *models.VirtualMachineInfo
 }
 
-func NewVMHandler(tpl *template.Template) *VMHandler {
-	return &VMHandler{tpl: tpl}
+type VMHandler struct {
+	tpl  *template.Template
+	repo VMRepository
+}
+
+func NewVMHandler(tpl *template.Template, repo VMRepository) *VMHandler {
+	return &VMHandler{
+		tpl:  tpl,
+		repo: repo,
+	}
 }
 
 func (h *VMHandler) GetVM(w http.ResponseWriter, r *http.Request) {
@@ -22,9 +30,9 @@ func (h *VMHandler) GetVM(w http.ResponseWriter, r *http.Request) {
 
 	selectedName := r.URL.Query().Get("vm")
 	pageData := models.PageData{
-		VMs:          service.GetVMs(),
+		VMs:          h.repo.GetVMs(),
 		SelectedName: selectedName,
-		Selected:     service.FindVM(selectedName),
+		Selected:     h.repo.FindVM(selectedName),
 	}
 
 	h.tpl.ExecuteTemplate(w, "base", pageData)
@@ -43,7 +51,7 @@ func (h *VMHandler) PostSkipShutdown(w http.ResponseWriter, r *http.Request) {
 	}
 
 	selectedName := r.FormValue("vm")
-	if vm := service.FindVM(selectedName); vm != nil {
+	if vm := h.repo.FindVM(selectedName); vm != nil {
 		vm.SkipToday = true
 	}
 

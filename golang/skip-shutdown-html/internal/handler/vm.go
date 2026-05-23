@@ -9,8 +9,8 @@ import (
 )
 
 type VMRepository interface {
-	GetVMs() []models.VirtualMachineInfo
-	FindVM(name string) *models.VirtualMachineInfo
+	GetVMs() ([]models.VirtualMachineInfo, error)
+	FindVM(name string) (*models.VirtualMachineInfo, error)
 }
 
 type VMHandler struct {
@@ -29,10 +29,20 @@ func (h *VMHandler) GetVM(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Received request: %s %s", r.Method, r.URL.Path)
 
 	selectedName := r.URL.Query().Get("vm")
+
+	vms, err := h.repo.GetVMs()
+	if err != nil {
+		log.Printf("GetVM: %v", err)
+	}
+	selectedVM, err := h.repo.FindVM(selectedName)
+	if err != nil {
+		log.Printf("FindVM: %v", err)
+	}
+
 	pageData := models.PageData{
-		VMs:          h.repo.GetVMs(),
+		VMs:          vms,
 		SelectedName: selectedName,
-		Selected:     h.repo.FindVM(selectedName),
+		Selected:     selectedVM,
 	}
 
 	h.tpl.ExecuteTemplate(w, "base", pageData)
@@ -51,7 +61,11 @@ func (h *VMHandler) PostSkipShutdown(w http.ResponseWriter, r *http.Request) {
 	}
 
 	selectedName := r.FormValue("vm")
-	if vm := h.repo.FindVM(selectedName); vm != nil {
+	vm, err := h.repo.FindVM(selectedName)
+	if err != nil {
+		log.Printf("FindVM: %v", err)
+	}
+	if vm != nil {
 		vm.SkipToday = true
 	}
 

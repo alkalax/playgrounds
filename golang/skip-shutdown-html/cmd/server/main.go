@@ -35,7 +35,7 @@ func main() {
 		filepath.Join(templateDir, "partials/dropdown.html"),
 	))
 
-	vmHandler := handler.NewVMHandler(tpl, storage.NewMockVMRepository())
+	vmHandler := handler.NewVMHandler(tpl, storage.NewSQLiteVMRepository("vms.db"))
 
 	http.HandleFunc("/", vmHandler.GetVM)
 	http.HandleFunc("/skip", vmHandler.PostSkipShutdown)

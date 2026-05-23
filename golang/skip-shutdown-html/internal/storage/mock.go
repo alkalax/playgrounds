@@ -19,16 +19,16 @@ func NewMockVMRepository() *MockVMRepository {
 	}
 }
 
-func (m *MockVMRepository) GetVMs() []models.VirtualMachineInfo {
-	return m.vms
+func (m *MockVMRepository) GetVMs() ([]models.VirtualMachineInfo, error) {
+	return m.vms, nil
 }
 
-func (m *MockVMRepository) FindVM(name string) *models.VirtualMachineInfo {
+func (m *MockVMRepository) FindVM(name string) (*models.VirtualMachineInfo, error) {
 	for i := range m.vms {
 		if m.vms[i].Name == name {
-			return &m.vms[i]
+			return &m.vms[i], nil
 		}
 	}
 
-	return nil
+	return nil, nil
 }

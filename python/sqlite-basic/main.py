@@ -1,4 +1,5 @@
 import sqlite3
+import random
 
 conn = sqlite3.connect("test.db")
 
@@ -12,7 +13,11 @@ cursor.execute("""
     )
 """)
 
-cursor.execute("INSERT INTO TestTable (Name, Age) VALUES (?, ?)", ("Bob", 34))
+names = ["Alice", "Bob", "Charlie", "Dan", "Ellie", "Francesca", "Garry", "Holly", "Ian", "Jane"]
+
+for name in names:
+    age = random.randint(20, 70)
+    cursor.execute("INSERT INTO TestTable (Name, Age) VALUES (?, ?)", (name, age))
 
 conn.commit()
 

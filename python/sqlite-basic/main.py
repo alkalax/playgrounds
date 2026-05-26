@@ -3,10 +3,12 @@ import random
 
 conn = sqlite3.connect("test.db")
 
+table_name = "TestTable"
+
 cursor = conn.cursor()
 
-cursor.execute("""
-    CREATE TABLE IF NOT EXISTS TestTable (
+cursor.execute(f"""
+    CREATE TABLE IF NOT EXISTS {table_name} (
         Id INTEGER PRIMARY KEY AUTOINCREMENT,
         Name TEXT NOT NULL,
         Age INTEGER
@@ -17,11 +19,11 @@ names = ["Alice", "Bob", "Charlie", "Dan", "Ellie", "Francesca", "Garry", "Holly
 
 for name in names:
     age = random.randint(20, 70)
-    cursor.execute("INSERT INTO TestTable (Name, Age) VALUES (?, ?)", (name, age))
+    cursor.execute(f"INSERT INTO {table_name} (Name, Age) VALUES (?, ?)", (name, age))
 
 conn.commit()
 
-cursor.execute("SELECT * FROM TestTable")
+cursor.execute(f"SELECT * FROM {table_name}")
 rows = cursor.fetchall()
 
 for row in rows:

@@ -10,29 +10,8 @@ jobs:
       image: python:3.11-alpine3.22
 
     steps:
-      - name: Install GNU tools for GitHub Actions
-        run: apk add --no-cache tar bash
-
       - name: Checkout
         uses: actions/checkout@v6
       
-      - name: Cache virtual environment
-        id: cache-venv
-        uses: actions/cache@v5
-        with:
-          path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('./.github/workflows/python_venv/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-venv-
-
-      - name: Install dependencies
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install -r ./.github/workflows/python_venv/requirements.txt
-
-      - name: Run script
-        run: |
-          source .venv/bin/activate
-          python ./.github/workflows/python_venv/main.py
+      - name: Run custom action
+        uses: ./.github/actions/python-venv

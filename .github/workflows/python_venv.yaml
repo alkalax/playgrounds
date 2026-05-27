@@ -1,0 +1,13 @@
+name: Python venv
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: [self-hosted]
+    container:
+      image: python:3.11-alpine3.22
+
+    steps:
+      - uses: actions/checkout@v6

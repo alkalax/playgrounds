@@ -1,0 +1,39 @@
+name: Python Venv action
+description: Testing venv caching for Python
+
+runs:
+  using: composite
+  steps:
+    - name: Install GNU tools for GitHub Actions
+      shell: sh
+      run: apk add --no-cache tar
+
+    - name: Generate dependency hash
+      id: calculate-hash
+      shell: sh
+      run: |
+        REQ_HASH=$(md5sum "${GITHUB_ACTION_PATH}/requirements.txt" | awk '{ print $1 }')
+        echo "hash=$REQ_HASH" >> $GITHUB_OUTPUT
+
+    - name: Cache virtual environment
+      id: cache-venv
+      uses: actions/cache@v5
+      with:
+        path: .venv
+        key: ${{ runner.os }}-venv-${{ steps.calculate-hash.outputs.hash }}
+        restore-keys: |
+          ${{ runner.os }}-venv-
+
+    - name: Install dependencies
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      shell: sh
+      run: |
+        python -m venv .venv
+        source .venv/bin/activate
+        pip install --no-cache-dir -r "${GITHUB_ACTION_PATH}/requirements.txt"
+
+    - name: Run script
+      shell: sh
+      run: |
+        source .venv/bin/activate
+        python "${GITHUB_ACTION_PATH}/main.py"

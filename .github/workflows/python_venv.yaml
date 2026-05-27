@@ -10,4 +10,8 @@ jobs:
       image: python:3.11-alpine3.22
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v6
+      
+      - name: Run custom action
+        uses: ./.github/actions/python-venv

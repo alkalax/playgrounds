@@ -8,12 +8,19 @@ runs:
       shell: sh
       run: apk add --no-cache tar
 
+    - name: Generate dependency hash
+      id: calculate-hash
+      shell: sh
+      run: |
+        REQ_HASH=$(md5sum "${GITHUB_ACTION_PATH}/requirements.txt" | awk '{ print $1 }')
+        echo "hash=$REQ_HASH" >> $GITHUB_OUTPUT
+
     - name: Cache virtual environment
-      id: cache-env
+      id: cache-venv
       uses: actions/cache@v5
       with:
-        path: ${{ github.action_path }}/.venv
-        key: ${{ runner.os }}-venv-${{ hashFiles(format('{0}/requirements.txt', github.action_path)) }}
+        path: .venv
+        key: ${{ runner.os }}-venv-${{ steps.calculate-hash.outputs.hash }}
         restore-keys: |
           ${{ runner.os }}-venv-
 
@@ -21,12 +28,12 @@ runs:
       if: steps.cache-venv.outputs.cache-hit != 'true'
       shell: sh
       run: |
-        python -m venv ${{ github.action_path }}/.venv
-        source ${{ github.action_path }}/.venv/bin/activate
-        pip install -r ${{ github.action_path }}/requirements.txt
+        python -m venv .venv
+        source .venv/bin/activate
+        pip install --no-cache-dir -r "${GITHUB_ACTION_PATH}/requirements.txt"
 
     - name: Run script
-      shell: sg
+      shell: sh
       run: |
-        source ${{ github.action_path }}/.venv/bin/activate
-        python ${{ github.action_path }}/main.py
+        source .venv/bin/activate
+        python "${GITHUB_ACTION_PATH}/main.py"

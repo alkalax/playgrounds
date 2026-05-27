@@ -25,7 +25,7 @@ try:
 
     conn.commit()
 
-    cursor.execute(f"SELECT * FROM {table_name}")
+    cursor.execute(f"SELECT * FROM {table_name} ORDER BY Name DESC")
     rows = cursor.fetchall()
 except Exception as e:
     print(e)

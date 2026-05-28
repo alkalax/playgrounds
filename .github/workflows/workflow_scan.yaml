@@ -1,0 +1,13 @@
+name: Build Queue Scan
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  scan:
+    runs-on: [self-hosted]
+
+  steps:
+
+    - name: Test
+      run: echo test

@@ -5,7 +5,7 @@ on:
 
 jobs:
   test:
-    runs-on: [self-hosted, non-existent]
+    runs-on: [self-hosted]
 
     steps:
       - run: echo test

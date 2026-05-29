@@ -8,6 +8,7 @@ jobs:
     runs-on: [self-hosted]
 
     steps:
+      - uses: actions/checkout@v6
 
       - uses: ./.github/actions/workflow-queue-scan
         with:

@@ -2,7 +2,7 @@ import os
 import sys
 import github
 
-API_TOKEN = os.getenv("GITHUB_TOKEN")
+API_TOKEN = os.getenv("INPUT_GITHUB_TOKEN")
 if not API_TOKEN:
     print("Invalid token")
     sys.exit(1)

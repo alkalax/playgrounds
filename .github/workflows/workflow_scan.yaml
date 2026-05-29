@@ -6,6 +6,8 @@ on:
 jobs:
   scan:
     runs-on: [self-hosted]
+    container:
+      image: python:3.12-alpine3.22 
 
     steps:
       - uses: actions/checkout@v6

@@ -13,6 +13,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - uses: ./.github/actions/prepare-container-env
+        id: prep-env
+
       - uses: ./.github/actions/workflow-queue-scan
         with:
-          github_token: ${{ secrets.WORKFLOW_SCAN_TOKEN }}
+          github-token: ${{ secrets.WORKFLOW_SCAN_TOKEN }}
+          distro-id: ${{ steps.prep-env.outputs.distro-id }}
+          hash: ${{ steps.prep-env.outputs.hash }}

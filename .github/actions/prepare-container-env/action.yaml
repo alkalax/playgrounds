@@ -2,14 +2,9 @@ name: Prepare Container Environment
 description: Install prerequisites and generate values for caching
 
 outputs:
-  distro:
+  distro-id:
     description: "Detected Linux Distribution"
-    type: string
     value: ${{ steps.detect-distro.outputs.distro-id }}
-  hash:
-    description: "Dependency hash"
-    type: string
-    value: ${{ steps.generate-hash.outputs.hash }}
 
 runs:
   using: composite
@@ -53,16 +48,8 @@ runs:
       run: |
         DISTRO="unknown"
         if [ -f "/etc/os-release" ]; then
-          DISTRO=$(grep -E '^ID=' /etc/os-release | cut -d= -f2 | tr '"')
+          DISTRO=$(grep -E '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
         fi
         echo "Distribution: ${DISTRO}"
 
         echo "distro-id=${DISTRO}" >> $GITHUB_OUTPUT
-
-
-    - name: Generate dependency hash
-      id: generate-hash
-      shell: sh
-      run: |
-        HASH=$(md5sum "${GITHUB_ACTION_PATH}/requirements.txt" | awk '{ print $1 }')
-        echo "hash=${HASH}" >> $GITHUB_OUTPUT

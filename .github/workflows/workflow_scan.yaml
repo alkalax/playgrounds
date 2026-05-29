@@ -9,5 +9,6 @@ jobs:
 
   steps:
 
-    - name: Test
-      run: echo test
+    - uses: ./.github/actions/workflow-queue-scan
+      inputs:
+        github_token: ${{ secrets.GITHUB_TOKEN }}

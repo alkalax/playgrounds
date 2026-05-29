@@ -1,0 +1,41 @@
+name: Workflow Queue Scan
+inputs:
+  github_token:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install GNU tools
+      shell: sh
+      run: apk add --no-cache tar
+
+    - name: Generate dependency hash
+      id: generate-hash
+      shell: sh
+      run: |
+        HASH=$(md5sum "${GITHUB_ACTION_PATH}/requirements.txt" | awk '{ print $1 }')
+        echo "hash=${HASJ}" >> $GITHUB_OUTPUT
+
+    - name: Cache virtual environment
+      id: cache-venv
+      uses: actions/cache@v5
+      with:
+        path: .venv
+        key: workflow-scan-${{ steps.generate-hash.outputs.hash }}
+        restore-keys: |
+          workflow-scan-
+
+    - name: Install dependencies
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      shell: sh
+      run: |
+        python -m venv .venv
+        source .venv/bin/activate
+        pip install --no-cache-dir -r "${GITHUB_ACTION_PATH}/requirements.txt"
+
+    - name: Run script
+      shell: sh
+      run: |
+        source .venv/bin/activate
+        python "${GITHUB_ACTION_PATH}/main.py"

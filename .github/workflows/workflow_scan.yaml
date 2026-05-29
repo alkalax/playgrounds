@@ -7,7 +7,8 @@ jobs:
   scan:
     runs-on: [self-hosted]
     container:
-      image: python:3.12-alpine3.22 
+      #image: python:3.12-alpine3.22 
+      image: public.ecr.aws/docker/library/python:3.11.8-bullseye
 
     steps:
       - uses: actions/checkout@v6

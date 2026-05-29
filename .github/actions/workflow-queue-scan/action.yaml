@@ -1,4 +1,5 @@
 name: Workflow Queue Scan
+description: Searches for required runners for workflows
 inputs:
   github_token:
     required: true

@@ -14,4 +14,4 @@ jobs:
 
       - uses: ./.github/actions/workflow-queue-scan
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.WORKFLOW_SCAN_TOKEN }}

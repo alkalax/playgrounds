@@ -9,7 +9,24 @@ runs:
   steps:
     - name: Install GNU tools
       shell: sh
-      run: apk add --no-cache tar
+      run: |
+        if ! command -v tar &> /dev/null || tar --help 2>&1 | grep -q "BusyBox"; then
+          echo "Valud GNU tar not found. Installing..."
+          if command -v apk &> /dev/null; then
+            apk add --no-cache tar
+          elif command -v apt-get &> /dev/null; then
+            apt-get install -y tar
+          elif command -v dnf &> /dev/null; then
+            dnf install -y tar
+          elif command -v yum &> /dev/null; then
+            yum install -y tar
+          else
+            echo "Unknown package manager. Could not install tar."
+            exit 1
+          fi
+        else
+          echo "Valid GNU tar is already installed."
+        fi
 
     - name: Generate dependency hash
       id: generate-hash

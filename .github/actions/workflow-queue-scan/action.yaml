@@ -44,17 +44,20 @@ runs:
       id: generate-hash
       shell: sh
       run: |
+        DISTRO_ID=$(grep -E '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
+        echo "distro-id=${DISTRO_ID}" >> $GITHUB_OUTPUT
+
         HASH=$(md5sum "${GITHUB_ACTION_PATH}/requirements.txt" | awk '{ print $1 }')
-        echo "hash=${HASJ}" >> $GITHUB_OUTPUT
+        echo "hash=${HASH}" >> $GITHUB_OUTPUT
 
     - name: Cache virtual environment
       id: cache-venv
       uses: actions/cache@v5
       with:
         path: .venv
-        key: workflow-scan-${{ steps.generate-hash.outputs.hash }}
+        key: workflow-scan-${{ steps.generate-hash.outputs.distro-id }}-${{ steps.generate-hash.outputs.hash }}
         restore-keys: |
-          workflow-scan-
+          workflow-scan-${{ steps.generate-hash.outputs.distro-id }}-
 
     - name: Install dependencies
       if: steps.cache-venv.outputs.cache-hit != 'true'

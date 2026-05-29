@@ -7,8 +7,8 @@ jobs:
   scan:
     runs-on: [self-hosted]
 
-  steps:
+    steps:
 
-    - uses: ./.github/actions/workflow-queue-scan
-      inputs:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ./.github/actions/workflow-queue-scan
+        inputs:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

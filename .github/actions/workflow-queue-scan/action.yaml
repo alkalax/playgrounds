@@ -1,44 +1,47 @@
 name: Workflow Queue Scan
 description: Searches for required runners for workflows
 inputs:
-  github_token:
+  github-token:
     required: true
+    type: string
+  distro-id:
+    required: true
+    type: string
+  hash:
+    required: true
+    type: string
 
 runs:
   using: composite
   steps:
-    - name: Install GNU tools
-      shell: sh
-      run: apk add --no-cache tar
-
     - name: Generate dependency hash
       id: generate-hash
       shell: sh
       run: |
         HASH=$(md5sum "${GITHUB_ACTION_PATH}/requirements.txt" | awk '{ print $1 }')
-        echo "hash=${HASJ}" >> $GITHUB_OUTPUT
+        echo "hash=${HASH}" >> $GITHUB_OUTPUT
 
     - name: Cache virtual environment
       id: cache-venv
       uses: actions/cache@v5
       with:
         path: .venv
-        key: workflow-scan-${{ steps.generate-hash.outputs.hash }}
+        key: workflow-scan-${{ inputs.distro-id }}-${{ steps.generate-hash.outputs.hash }}
         restore-keys: |
-          workflow-scan-
+          workflow-scan-${{ inputs.distro-id }}-
 
     - name: Install dependencies
       if: steps.cache-venv.outputs.cache-hit != 'true'
       shell: sh
       run: |
         python -m venv .venv
-        source .venv/bin/activate
+        . .venv/bin/activate
         pip install --no-cache-dir -r "${GITHUB_ACTION_PATH}/requirements.txt"
 
     - name: Run script
       shell: sh
       env: 
-        GITHUB_TOKEN: ${{ inputs.github_token }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
-        source .venv/bin/activate
+        . .venv/bin/activate
         python "${GITHUB_ACTION_PATH}/main.py"

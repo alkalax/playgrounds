@@ -7,11 +7,18 @@ jobs:
   scan:
     runs-on: [self-hosted]
     container:
-      image: python:3.12-alpine3.22 
+      #image: python:3.12-alpine3.22 
+      #image: public.ecr.aws/docker/library/python:3.11.8-bullseye
+      image: public.ecr.aws/docker/library/python:3.11.14-alpine3.21
 
     steps:
       - uses: actions/checkout@v6
 
+      - uses: ./.github/actions/prepare-container-env
+        id: prep-env
+
       - uses: ./.github/actions/workflow-queue-scan
         with:
-          github_token: ${{ secrets.WORKFLOW_SCAN_TOKEN }}
+          github-token: ${{ secrets.WORKFLOW_SCAN_TOKEN }}
+          distro-id: ${{ steps.prep-env.outputs.distro-id }}
+          hash: ${{ steps.prep-env.outputs.hash }}

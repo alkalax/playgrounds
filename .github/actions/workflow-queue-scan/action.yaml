@@ -13,6 +13,7 @@ inputs:
 outputs:
   runners:
     description: Matching runners
+    value: ${{ steps.run-script.outputs.runners }}
 
 runs:
   using: composite
@@ -42,6 +43,7 @@ runs:
         pip install --no-cache-dir -r "${GITHUB_ACTION_PATH}/requirements.txt"
 
     - name: Run script
+      id: run-script
       shell: sh
       env: 
         GITHUB_TOKEN: ${{ inputs.github-token }}

@@ -44,6 +44,6 @@ output_file = os.getenv("GITHUB_OUTPUT")
 
 if output_file:
     with open(output_file, "a") as f:
-        f.write(f"runners={','.join(matching_runners)}")
+        f.write(f"runners={','.join(matching_runners)}\n")
 else:
     print("Couldn't open output file")

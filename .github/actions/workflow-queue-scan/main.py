@@ -32,8 +32,18 @@ for run in repo.get_workflow_runs():
 
                     if set(job.labels).issubset({label['name'] for label in runner.labels}):
                         print(f"Adding runner {runner.name}")
-                        matching_runners.append(runner)
+                        matching_runners.append(runner.name)
             if job.runner_name:
                 print(f"Runner name: {job.runner_name}")
             if job.runner_group_name:
                 print(f"Runner group name: {job.runner_group_name}")
+
+print(f"Matching runners: {matching_runners}")
+
+output_file = os.getenv("GITHUB_OUTPUT")
+
+if output_file:
+    with open(output_file, "a") as f:
+        f.write(f"runners={','.join(matching_runners)}\n")
+else:
+    print("Couldn't open output file")

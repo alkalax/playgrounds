@@ -10,6 +10,9 @@ inputs:
   hash:
     required: true
     type: string
+outputs:
+  runners:
+    description: Matching runners
 
 runs:
   using: composite

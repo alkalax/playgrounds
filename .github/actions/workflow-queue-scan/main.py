@@ -12,8 +12,6 @@ gh = github.Github(auth=auth)
 
 repo = gh.get_repo("alkalax/playgrounds")
 
-print(repo)
-
 runners = repo.get_self_hosted_runners()
 
 matching_runners = []

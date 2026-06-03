@@ -1,6 +1,9 @@
 name: Workflow Queue Scan
 description: Searches for required runners for workflows
 inputs:
+  labels:
+    required: true
+    type: string
   github-token:
     required: true
     type: string
@@ -47,6 +50,7 @@ runs:
       shell: sh
       env: 
         GITHUB_TOKEN: ${{ inputs.github-token }}
+        LABELS: ${{ inputs.labels }}
       run: |
         . .venv/bin/activate
         python "${GITHUB_ACTION_PATH}/main.py"

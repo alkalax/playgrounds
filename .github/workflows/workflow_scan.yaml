@@ -23,6 +23,7 @@ jobs:
           github-token: ${{ secrets.WORKFLOW_SCAN_TOKEN }}
           distro-id: ${{ steps.prep-env.outputs.distro-id }}
           hash: ${{ steps.prep-env.outputs.hash }}
+          labels: self-hosted
 
       - shell: sh
         run: |

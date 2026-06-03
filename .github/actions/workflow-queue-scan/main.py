@@ -7,6 +7,11 @@ if not API_TOKEN:
     print("Invalid token")
     sys.exit(1)
 
+labels = os.getenv("LABELS")
+if not labels:
+  print("Labels missing")
+  sys.exit(1)
+
 auth = github.Auth.Token(API_TOKEN)
 gh = github.Github(auth=auth)
 

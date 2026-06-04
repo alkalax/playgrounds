@@ -12,6 +12,8 @@ if not labels:
   print("Labels missing")
   sys.exit(1)
 
+print(f"Labels: {labels}")
+
 auth = github.Auth.Token(API_TOKEN)
 gh = github.Github(auth=auth)
 

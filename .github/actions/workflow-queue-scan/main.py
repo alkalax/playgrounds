@@ -34,6 +34,7 @@ for run in repo.get_workflow_runs():
                 for runner in runners:
                     print(f"Runner: {runner.name}")
                     print(f"Status: {runner.status}")
+                    print(f"Labels: {[label['name'] for label in runner.lables]}")
 
                     if set(job.labels).issubset({label['name'] for label in runner.labels}):
                         print(f"Adding runner {runner.name}")

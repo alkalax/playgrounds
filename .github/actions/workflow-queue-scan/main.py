@@ -32,7 +32,7 @@ for run in repo.get_workflow_runs():
             if job.labels:
                 print(f"Labels: {job.labels}")
                 for runner in runners:
-                    print(f"Runner: {runner.name} {runner.status}")
+                    print(f"Runner: {runner.name} - {runner.status}")
                     print(f"Labels: {[label['name'] for label in runner.labels]}")
 
                     if set(job.labels).issubset({label['name'] for label in runner.labels}):

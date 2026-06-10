@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-echo "Test"
+source ./utils.sh
+
+install_jumpbox_prerequisites

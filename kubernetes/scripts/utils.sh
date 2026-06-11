@@ -8,3 +8,14 @@ function install_jumpbox_prerequisites() {
 
   echo "Done."
 }
+
+function download_binaries() {
+  echo "Downloading binaries..."
+
+  mkdir -p downloads
+  wget -q --show-progress --https-only --timestamping \
+    -P downloads \
+    -i downloads-amd64.txt
+
+  echo "Done."
+}

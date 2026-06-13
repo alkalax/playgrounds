@@ -19,3 +19,27 @@ function download_binaries() {
 
   echo "Done."
 }
+
+function extract_downloads() {
+  echo "Extracting downloads..."
+
+  mkdir -p downloads/{client,controller,worker}
+  tar xvf downloads/crictl-v1.36.0-linux-amd64.tar.gz \
+    -C downloads/worker/
+  tar xvf downloads/containerd-2.3.1-linux-amd64.tar.gz  \
+    --strip-components 1 \
+    -C downloads/worker/
+  tar xvf downloads/etcd-v3.6.12-linux-amd64.tar.gz \
+    --strip-components 1 \
+    -C downloads/ \
+    etcd-v3.6.12-linux-amd64/etcdctl \
+    etcd-v3.6.12-linux-amd64/etcd
+
+  mv downloads/{etcdctl,kubectl} downloads/client/
+  mv downloads/{etcd,kube-apiserver,kube-controller-manager,kube-scheduler} \
+    downloads/controller/
+  mv downloads/{kubelet,kube-proxy} downloads/worker/
+  mv downloads/runc.amd64 downloads/worker/runc
+
+  echo "Done."
+}

@@ -41,5 +41,8 @@ function extract_downloads() {
   mv downloads/{kubelet,kube-proxy} downloads/worker/
   mv downloads/runc.amd64 downloads/worker/runc
 
+  echo "Deleting archives..."
+  rm -rf downloads/*.gz
+
   echo "Done."
 }

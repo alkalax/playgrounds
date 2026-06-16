@@ -48,3 +48,14 @@ function extract_downloads() {
 
   echo "Done."
 }
+
+function generate_certificates() {
+  echo "Generating CA key and certificate..."
+  
+  openssl genrsa -out ca.key 4096
+  openssl req -x509 -new -sha512 -noenc \
+    -key ca.key -days 3653 \
+    -subj "/CN=KUBERNETES-CA" \
+    -addext "basicConstraints = critical,CA:TRUE" \
+    -out ca.crt
+}
